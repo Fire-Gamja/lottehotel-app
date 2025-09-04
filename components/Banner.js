@@ -1,9 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react'; // useState, useEffect 제거
 import { View, Text, ImageBackground, TextInput, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import TopBar from './TopBar';
 import Searchico from '../assets/ico/search.svg';
 import Nextico from '../assets/ico/next.svg';
+
+// 1. Store를 import 합니다.
+import useHomeStore from '../stores/homeStore';
 
 const bannerImages = [
   require('../assets/banner1.webp'),
@@ -12,13 +15,20 @@ const bannerImages = [
   require('../assets/banner4.webp'),
 ];
 
-export default function Banner({ slideIndex }) {
+// 2. 더 이상 부모로부터 props({ slideIndex })를 받지 않습니다.
+export default function Banner() {
+  // 3. 필요한 slideIndex 상태를 Store에서 직접 가져옵니다.
+  const slideIndex = useHomeStore((state) => state.slideIndex);
+
   return (
     <ImageBackground
-      source={bannerImages[slideIndex - 1]}
+      // 4. Store에서 가져온 slideIndex를 사용합니다.
+      // 이미지가 없을 경우를 대비해 기본값을 설정합니다.
+      source={bannerImages[slideIndex - 1] || bannerImages[0]}
       style={styles.bannerBackground}
       resizeMode="cover"
     >
+      {/* TopBar는 이미 수정되었으므로 자동으로 Store를 사용합니다. */}
       <TopBar />
       <LinearGradient
         colors={["rgba(0,0,0,0.4)", "transparent"]}
@@ -48,11 +58,12 @@ export default function Banner({ slideIndex }) {
   );
 }
 
+// ... 이하 스타일 코드는 동일
 const styles = StyleSheet.create({
   bannerBackground: {
     position: 'relative',
     height: 410,
-    paddingTop: 56, // TopBar 높이만큼 패딩
+    paddingTop: 56,
     paddingHorizontal: 16,
     justifyContent: 'space-between',
   },
@@ -111,3 +122,4 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
+

@@ -1,53 +1,60 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react'; // useState 제거
 import {
   SafeAreaView,
+  ScrollView,
+  StyleSheet,
   View,
   Text,
-  StyleSheet,
-  ScrollView,
-  Platform, // Platform 모듈을 사용합니다.
+  Platform,
 } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
+// 컴포넌트 import
 import TopBar from './components/TopBar';
 import Banner from './components/Banner';
 import Promotion from './components/Promotion';
 import TimeSaleBanner from './components/TimeSaleBanner';
 import PromotionSection from './components/PromotionSection';
 import SpecialOffers from './components/Special Offers';
-import BottomTabIcon from './components/BottomTabIcon';
 import Bottom from './components/Bottom';
+import BottomTabIcon from './components/BottomTabIcon';
 import Reservation from './components/Reservation';
+
+// Zustand Store import
+import useHomeStore from './stores/homeStore';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
-// 홈 화면 컴포넌트 (기존과 동일)
 function HomeScreen() {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [slideIndex, setSlideIndex] = useState(1);
+  // Store에서 상태 변경 함수와 인터벌 제어 함수를 가져옵니다.
+  const { setIsScrolled, startSlideInterval, clearSlideInterval } = useHomeStore();
 
+  // 화면이 처음 나타날 때 배너 자동 넘김을 시작하고,
+  // 화면이 사라질 때 자동 넘김을 정지합니다.
   useEffect(() => {
-    const interval = setInterval(() => {
-      setSlideIndex(prev => (prev < 4 ? prev + 1 : 1));
-    }, 6000);
-    return () => clearInterval(interval);
+    startSlideInterval();
+    return () => {
+      clearSlideInterval();
+    };
   }, []);
 
   return (
     <SafeAreaView style={styles.container}>
-      <TopBar isScrolled={isScrolled} />
+      {/* 이제 props를 전달하지 않습니다. */}
+      <TopBar />
       <ScrollView
         onScroll={(event) => {
           const y = event.nativeEvent.contentOffset.y;
+          // 스크롤이 발생하면 Store의 상태를 직접 업데이트합니다.
           setIsScrolled(y > 30);
         }}
         scrollEventThrottle={16}
       >
-        <Banner slideIndex={slideIndex} />
+        {/* 이제 props를 전달하지 않습니다. */}
+        <Banner />
         <Promotion />
         <TimeSaleBanner />
         <PromotionSection />
@@ -58,14 +65,12 @@ function HomeScreen() {
   );
 }
 
-// 더미 화면 컴포넌트 (기존과 동일)
 function DummyScreen({ label }) {
   return (
     <View style={styles.center}><Text>{label}</Text></View>
   );
 }
 
-// 탭 네비게이터 컴포넌트 (기존과 동일)
 function MainTabs() {
   return (
     <Tab.Navigator
@@ -100,7 +105,6 @@ function MainTabs() {
   );
 }
 
-// 최상위 네비게이터 (기존과 동일)
 export default function App() {
   return (
     <NavigationContainer>
@@ -122,7 +126,6 @@ export default function App() {
   );
 }
 
-// 스타일 시트
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -138,15 +141,14 @@ const styles = StyleSheet.create({
     left: 16,
     right: 16,
     height: 120,
-    paddingBottom: Platform.OS === 'ios' ? 20 : 10, // 이미 잘 적용되어 있습니다.
+    paddingBottom: Platform.OS === 'ios' ? 20 : 10,
     backgroundColor: '#fff',
-    // iOS 전용 그림자
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 15,
-    // Android 전용 그림자 (이 부분을 추가했습니다)
     elevation: 10,
     overflow: 'visible',
   },
 });
+
