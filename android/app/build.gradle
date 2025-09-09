@@ -1,0 +1,51 @@
+apply plugin: "com.android.application"
+apply plugin: "kotlin-android"
+apply plugin: "com.facebook.react"
+
+android {
+namespace "com.lottehotel"
+compileSdkVersion rootProject.ext.compileSdkVersion
+
+defaultConfig {
+    applicationId "com.lottehotel"
+    minSdkVersion rootProject.ext.minSdkVersion
+    targetSdkVersion rootProject.ext.targetSdkVersion
+    versionCode 1
+    versionName "1.0"
+}
+
+signingConfigs {
+    debug {
+        storeFile file('debug.keystore')
+        storePassword 'android'
+        keyAlias 'androiddebugkey'
+        keyPassword 'android'
+    }
+}
+
+buildTypes {
+    release {
+        minifyEnabled false
+        proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+    }
+}
+
+}
+
+repositories {
+mavenCentral()
+maven { url "https://www.jitpack.io" }
+}
+
+dependencies {
+implementation fileTree(dir: "libs", include: ["*.jar"])
+implementation "com.facebook.react:react-native:+"
+
+// 이전에 발생한 오류를 해결하기 위해 불필요한 ':expo' 프로젝트 참조를 제거합니다.
+// implementation project(':expo')
+
+// 기타 필요한 의존성 추가
+implementation "androidx.appcompat:appcompat:1.6.1"
+implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
+
+}

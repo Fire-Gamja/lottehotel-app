@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image } from 'react-native';
 
-// 예시 아이콘 컴포넌트
 function DummyIcon() {
   return <View style={{width:45, height:45, backgroundColor:'#eee', borderRadius:12}} />;
 }
@@ -32,7 +31,6 @@ export default function Promotion() {
         </View>
       </View>
       <View style={styles.bannerBox}>
-        {/* 예시 배너 이미지, 실제 이미지는 교체 가능 */}
         <Image
           source={require('../assets/rewards.jpg')}
           style={styles.bannerImg}

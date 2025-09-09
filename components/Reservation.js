@@ -117,14 +117,14 @@ const styles = StyleSheet.create({
   },
   headerContent: {
     flex: 1,
-    justifyContent: 'space-between', // Aligns children to top and bottom
-    alignItems: 'center', // Centers children horizontally
+    justifyContent: 'space-between', 
+    alignItems: 'center',
     paddingTop: 10,
     paddingBottom: 15,
     paddingHorizontal: 16,
   },
   closeButton: {
-    alignSelf: 'flex-end', // Pushes the button to the right
+    alignSelf: 'flex-end',
   },
   tabContainer: {
     flexDirection: 'row',
@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
 searchButton: {
   backgroundColor: '#000',
   padding: 18,
-  borderRadius: 0,      // 필요시 0으로 설정해서 완전한 직사각형으로
+  borderRadius: 0,    
   alignItems: 'center',
   width: '100%',
 },

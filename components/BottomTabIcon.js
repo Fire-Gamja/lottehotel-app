@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Platform } from 'react-native'; // Platform을 import 합니다.
+import { View, Platform } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 export default function BottomTabIcon({ routeName, focused }) {
@@ -15,7 +15,6 @@ export default function BottomTabIcon({ routeName, focused }) {
         default: iconName = 'ellipse-outline'; break;
     }
 
-    // '예약하기' 버튼 스타일
     if (routeName === '예약하기') {
         return (
             <View style={{
@@ -50,14 +49,12 @@ export default function BottomTabIcon({ routeName, focused }) {
         );
     }
 
-    // 나머지 탭 아이콘 스타일
     return (
         <View style={{
             position: 'absolute',
-            // 여기도 Platform.select를 적용합니다.
             top: Platform.select({
                 ios: 14,
-                android: 20, // 안드로이드에서는 아이콘 위치를 살짝 내립니다.
+                android: 20,
             }),
             alignItems: 'center',
             justifyContent: 'center',

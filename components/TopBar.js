@@ -1,23 +1,35 @@
+import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import LogoSvg from '../assets/ico/logo.svg';
-import Menu from '../assets/ico/menu.svg';
-
-// 1. Store를 import 합니다.
+import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import useHomeStore from '../stores/homeStore';
 
-// 2. 더 이상 부모로부터 props({ isScrolled })를 받지 않습니다.
+// Import SVG components
+import LogoSvg from '../assets/ico/logo.svg';
+import MenuSvg from '../assets/ico/menu.svg';
+
 export default function TopBar() {
-  // 3. 필요한 isScrolled 상태를 Store에서 직접 가져옵니다.
+  // Zustand store에서 스크롤 상태 가져오기
   const isScrolled = useHomeStore((state) => state.isScrolled);
 
+  // Reanimated를 사용한 배경색 애니메이션
+  const animatedHeaderStyle = useAnimatedStyle(() => {
+    return {
+      backgroundColor: withTiming(isScrolled ? '#FFFFFF' : 'transparent', {
+        duration: 200,
+      }),
+    };
+  });
+
+  // SVG 아이콘 색상을 결정합니다 (스크롤되면 검은색, 아니면 흰색)
+  const iconColor = isScrolled ? '#000000' : '#FFFFFF';
+
   return (
-    // 4. Store에서 가져온 isScrolled 상태를 사용하여 스타일을 적용합니다.
-    <View style={[styles.header, isScrolled && styles.scrolled]}>
-      <LogoSvg />
+    <Animated.View style={[styles.header, animatedHeaderStyle, isScrolled && styles.scrolledShadow]}>
+      <LogoSvg width={150} height={20} fill={iconColor} />
       <TouchableOpacity>
-        <Menu />
+        <MenuSvg width={24} height={24} fill={iconColor} />
       </TouchableOpacity>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -32,12 +44,9 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     paddingHorizontal: 16,
-    paddingTop: 12,
     height: 56,
-    backgroundColor: 'transparent',
   },
-  scrolled: {
-    backgroundColor: '#fff',
+  scrolledShadow: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
@@ -45,4 +54,3 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
 });
-

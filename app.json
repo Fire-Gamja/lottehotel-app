@@ -13,9 +13,15 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/lottehotel-logo.png",
+      "backgroundColor": "#816C5B",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "ios": {
+        "image": "./assets/lottehotel_logo.png"
+      },
+      "android": {
+        "image": "./assets/lottehotel_logo.png"
+      }
     },
     "ios": {
       "supportsTablet": true
@@ -25,7 +31,8 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.anonymous.lottehotel"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -33,7 +40,5 @@
     "plugins": [
       "expo-font"
     ]
-    
   }
-  
 }

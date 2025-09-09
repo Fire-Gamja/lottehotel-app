@@ -50,7 +50,7 @@ function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="dark-content" />
       <TopBar />
       <ScrollView
         onScroll={(event) => {

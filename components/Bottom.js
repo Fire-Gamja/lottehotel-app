@@ -13,13 +13,12 @@ export default function Bottom() {
 
   const onScroll = (e) => {
     const x = e.nativeEvent.contentOffset.x;
-    const index = Math.round(x / (width - 32)); // width - 마진값 * 2
+    const index = Math.round(x / (width - 32));
     setCurrentIndex(index);
   };
 
   return (
     <View style={styles.container}>
-      {/* 마진 기준 슬라이드 */}
       <View style={styles.sliderWrapper}>
         <ScrollView
           horizontal
@@ -39,13 +38,11 @@ export default function Bottom() {
           ))}
         </ScrollView>
 
-        {/* 페이지 인디케이터 */}
         <View style={styles.indicator}>
           <Text style={styles.indicatorText}>{currentIndex + 1} / {images.length}</Text>
         </View>
       </View>
 
-      {/* 개인정보 처리방침 */}
       <View style={styles.footer}>
         <Text style={styles.footerText}>개인보 처리방침</Text>
       </View>
