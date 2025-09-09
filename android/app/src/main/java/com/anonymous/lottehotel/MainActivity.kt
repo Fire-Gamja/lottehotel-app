@@ -1,4 +1,5 @@
-package com.anonymous.lottehotel // 이 부분은 본인의 패키지 이름에 맞게 유지하세요.
+package com.anonymous.lottehotel
+import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build
 import android.os.Bundle
@@ -15,11 +16,11 @@ class MainActivity : ReactActivity() {
     // Set the theme to AppTheme BEFORE onCreate to support
     // coloring the background, status bar, and navigation bar.
     // This is required for expo-splash-screen.
-    setTheme(R.style.AppTheme);
-    // --- Reanimated V2 설치를 위해 이 부분을 수정합니다 ---
-    // 기존: super.onCreate(null)
-    // 변경:
-    super.onCreate(savedInstanceState)
+    // setTheme(R.style.AppTheme);
+    // @generated begin expo-splashscreen - expo prebuild (DO NOT MODIFY) sync-f3ff59a738c56c9a6119210cb55f0b613eb8b6af
+    SplashScreenManager.registerOnActivity(this)
+    // @generated end expo-splashscreen
+    super.onCreate(null)
   }
 
   /**
@@ -37,17 +38,17 @@ class MainActivity : ReactActivity() {
           this,
           BuildConfig.IS_NEW_ARCHITECTURE_ENABLED,
           object : DefaultReactActivityDelegate(
-            this,
-            mainComponentName,
-            fabricEnabled
+              this,
+              mainComponentName,
+              fabricEnabled
           ){})
   }
 
   /**
-   * Align the back button behavior with Android S
-   * where moving root activities to background instead of finishing activities.
-   * @see <a href="[https://developer.android.com/reference/android/app/Activity#onBackPressed](https://developer.android.com/reference/android/app/Activity#onBackPressed)()">onBackPressed</a>
-   */
+    * Align the back button behavior with Android S
+    * where moving root activities to background instead of finishing activities.
+    * @see <a href="https://developer.android.com/reference/android/app/Activity#onBackPressed()">onBackPressed</a>
+    */
   override fun invokeDefaultOnBackPressed() {
       if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.R) {
           if (!moveTaskToBack(false)) {
