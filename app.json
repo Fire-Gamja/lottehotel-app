@@ -1,0 +1,44 @@
+{
+  "expo": {
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
+    "name": "lottehotel",
+    "slug": "lottehotel",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/lottehotel-logo.png",
+      "backgroundColor": "#816C5B",
+      "resizeMode": "contain",
+      "ios": {
+        "image": "./assets/lottehotel_logo.png"
+      },
+      "android": {
+        "image": "./assets/lottehotel_logo.png"
+      }
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true,
+      "package": "com.anonymous.lottehotel"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-font"
+    ]
+  }
+}

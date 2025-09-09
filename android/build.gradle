@@ -1,0 +1,28 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+buildscript {
+ext {
+buildToolsVersion = "35.0.0"
+minSdkVersion = 24
+compileSdkVersion = 35
+targetSdkVersion = 35
+}
+repositories {
+google()
+mavenCentral()
+}
+dependencies {
+classpath("com.android.tools.build:gradle:8.1.0")
+classpath("com.facebook.react:react-native-gradle-plugin:0.79.5")
+classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.0.21")
+}
+}
+
+// 모든 서브 프로젝트 공통 레포지토리
+allprojects {
+repositories {
+google()
+mavenCentral()
+maven { url 'https://www.jitpack.io' }
+}
+}
