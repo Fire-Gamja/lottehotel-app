@@ -12,10 +12,15 @@ import {
   StatusBar
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import useBookingStore from '../stores/bookingStore';
 
-// 각 항목을 위한 재사용 가능한 컴포넌트
-const InfoRow = ({ label, value, subValue }) => (
-  <TouchableOpacity style={styles.row}>
+const strip = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+const fmt = (d) =>
+  `${String(d.getMonth() + 1).padStart(2, '0')}월 ${String(d.getDate()).padStart(2, '0')}일(${['일', '월', '화', '수', '목', '금', '토'][d.getDay()]})`;
+const nights = (s, e) => Math.max(1, Math.round((strip(e) - strip(s)) / 86400000));
+
+const InfoRow = ({ label, value, subValue, onPress }) => (
+  <TouchableOpacity style={styles.row} onPress={onPress}>
     <View>
       <Text style={styles.label}>{label}</Text>
       <Text style={styles.value}>{value}</Text>
@@ -25,12 +30,28 @@ const InfoRow = ({ label, value, subValue }) => (
   </TouchableOpacity>
 );
 
-export default function Reservation({ navigation }) {
+export default function Reservation({ navigation, route }) {
   const [activeTab, setActiveTab] = useState('객실');
+
+  // ✅ HotelSelect에서 미리 저장해둔 값 (DateSelect에서 날짜를 선택하지 않고 닫아도 유지됨)
+  const { hotelList, startDate, endDate } = useBookingStore();
+
+  // "첫번째 호텔 외 N" 포맷터
+  const buildHotelDisplay = (list) => {
+    if (!list || list.length === 0) return "호텔을 선택해 주세요.";
+    if (list.length === 1) return list[0];
+    return `${list[0]} 외 ${list.length - 1}`;
+  };
+
+  const hotelDisplay = buildHotelDisplay(hotelList);
+
+  // 기본값: 오늘/익일 + DateSelect에서 확정 시 덮어쓰기
+  const today = strip(new Date());
+  const start = startDate ?? today;
+  const end   = endDate   ?? new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header with Background Image */}
       <ImageBackground
         source={require('../assets/ulsan_3.webp')}
         style={styles.header}
@@ -38,39 +59,50 @@ export default function Reservation({ navigation }) {
       >
         <View style={styles.headerOverlay} />
         <View style={styles.headerContent}>
-          {/* Top part of the header */}
           <TouchableOpacity style={styles.closeButton} onPress={() => navigation.goBack()}>
             <Ionicons name="close-outline" size={30} color="#fff" />
           </TouchableOpacity>
 
-          {/* Bottom part of the header */}
           <View style={styles.tabContainer}>
             <TouchableOpacity
-              style={[
-                styles.tab,
-                activeTab === '객실' && styles.activeTab
-              ]}
-              onPress={() => setActiveTab('객실')}>
+              style={[styles.tab, activeTab === '객실' && styles.activeTab]}
+              onPress={() => setActiveTab('객실')}
+            >
               <Text style={[styles.tabText, activeTab === '객실' && styles.activeTabText]}>객실</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[
-                styles.tab,
-                activeTab === '다이닝' && styles.activeTab
-              ]}
-              onPress={() => setActiveTab('다이닝')}>
+              style={[styles.tab, activeTab === '다이닝' && styles.activeTab]}
+              onPress={() => setActiveTab('다이닝')}
+            >
               <Text style={[styles.tabText, activeTab === '다이닝' && styles.activeTabText]}>다이닝</Text>
             </TouchableOpacity>
           </View>
         </View>
       </ImageBackground>
 
-      {/* Scrollable Content */}
       <ScrollView style={styles.scrollView}>
         <View style={styles.scrollContent}>
-          <InfoRow label="호텔/지역" value="호텔을 선택해 주세요." />
-          <InfoRow label="체크인/아웃" value="09월 04일(목) ~ 09월 05일(금) / 1박" />
+          <InfoRow
+            label="호텔/지역"
+            value={hotelDisplay}
+            onPress={() => navigation.navigate('HotelSelect')}
+          />
+
+          <InfoRow
+            label="체크인/아웃"
+            value={`${fmt(start)} ~ ${fmt(end)} / ${nights(start, end)}박`}
+            onPress={() =>
+              navigation.navigate('DateSelect', {
+                initialStart: dates.start,
+                initialEnd: dates.end,
+                popAfterConfirm: 1,
+                onPicked: (s, e) => setDates({ start: s, end: e }),
+              })
+            }
+          />
+
           <InfoRow label="객실/인원" value="객실 1 / 성인 2, 어린이 0" />
+
           <TouchableOpacity style={styles.promoContainer}>
             <Ionicons name="pricetag-outline" size={20} color="#555" />
             <Text style={styles.promoText}>프로모션 코드</Text>
@@ -78,7 +110,6 @@ export default function Reservation({ navigation }) {
         </View>
       </ScrollView>
 
-      {/* Bottom Fixed Area */}
       <View style={styles.bottomContainer}>
         <View style={styles.rewardsBanner}>
           <Image
@@ -90,11 +121,12 @@ export default function Reservation({ navigation }) {
             <Text style={styles.rewardsText}>리워즈 회원가입하고 혜택받으세요.</Text>
           </View>
         </View>
-  <View style={{ marginHorizontal: -20 }}>
-    <TouchableOpacity style={styles.searchButton}>
-      <Text style={styles.searchButtonText}>검색</Text>
-    </TouchableOpacity>
-  </View>
+
+        <View style={{ marginHorizontal: -20 }}>
+          <TouchableOpacity style={styles.searchButton}>
+            <Text style={styles.searchButtonText}>검색</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -117,7 +149,7 @@ const styles = StyleSheet.create({
   },
   headerContent: {
     flex: 1,
-    justifyContent: 'space-between', 
+    justifyContent: 'space-between',
     alignItems: 'center',
     paddingTop: 10,
     paddingBottom: 15,
@@ -144,12 +176,11 @@ const styles = StyleSheet.create({
   },
   tabText: {
     fontSize: 16,
-    fontWeight: 'normal',
     color: '#fff',
   },
   activeTabText: {
     color: '#000',
-    fontWeight: 'regular',
+    fontWeight: '500',
   },
   scrollView: {
     flex: 1,
@@ -217,18 +248,16 @@ const styles = StyleSheet.create({
   rewardsText: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: 'regular',
   },
-searchButton: {
-  backgroundColor: '#000',
-  padding: 18,
-  borderRadius: 0,    
-  alignItems: 'center',
-  width: '100%',
-},
+  searchButton: {
+    backgroundColor: '#000',
+    padding: 18,
+    borderRadius: 0,
+    alignItems: 'center',
+    width: '100%',
+  },
   searchButtonText: {
     color: '#fff',
     fontSize: 18,
-    fontWeight: 'regular',
   },
 });
