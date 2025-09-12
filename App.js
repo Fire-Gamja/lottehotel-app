@@ -53,6 +53,8 @@ function HomeScreen() {
       <StatusBar barStyle="dark-content" />
       <TopBar />
       <ScrollView
+        bounces={false}
+        overScrollMode='never'
         onScroll={(event) => {
           const y = event.nativeEvent.contentOffset.y;
           setIsScrolled(y > 30);
@@ -83,8 +85,8 @@ function MainTabs() {
         headerShown: false,
         tabBarStyle: styles.tabBarStyle,
         tabBarLabel: ({ focused }) => (
-          <View style={{ marginTop: 14, alignItems: 'center' }}>
-            <Text style={{ fontSize: 14, color: focused ? '#000' : '#aaa' }}>{route.name}</Text>
+          <View style={{ marginTop: 10, alignItems: 'center' }}>
+            <Text style={{ fontSize: 13, color: focused ? '#000' : '#aaa' }}>{route.name}</Text>
           </View>
         ),
         tabBarIcon: ({ focused }) => (
@@ -153,7 +155,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         left: 16,
         right: 16,
-        height: 120,
+        height: 90,
         paddingBottom: Platform.OS === 'ios' ? 20 : 10,
         backgroundColor: '#fff',
         shadowColor: '#000',

@@ -21,13 +21,15 @@ export default function TopBar() {
   });
 
   // SVG 아이콘 색상을 결정합니다 (스크롤되면 검은색, 아니면 흰색)
-  const iconColor = isScrolled ? '#000000' : '#FFFFFF';
+  const logoColor = isScrolled ? '#978773' : '#FFFFFF';
+
+  const menuColor = isScrolled ? '#000000' : '#FFFFFF';
 
   return (
     <Animated.View style={[styles.header, animatedHeaderStyle, isScrolled && styles.scrolledShadow]}>
-      <LogoSvg width={150} height={20} fill={iconColor} />
+      <LogoSvg width={191} height={25} color={logoColor} />
       <TouchableOpacity>
-        <MenuSvg width={24} height={24} fill={iconColor} />
+        <MenuSvg width={30} height={45} fill={menuColor} />
       </TouchableOpacity>
     </Animated.View>
   );
@@ -40,7 +42,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     zIndex: 100,
     position: 'absolute',
-    top: 0,
+    top: 47,
     left: 0,
     right: 0,
     paddingHorizontal: 16,

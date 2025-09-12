@@ -1,12 +1,13 @@
-import React from 'react'; // useState, useEffect 제거
-import { View, Text, ImageBackground, TextInput, StyleSheet } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, Text, Image, StyleSheet, Dimensions, TextInput } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import TopBar from './TopBar';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
+import useHomeStore from '../stores/homeStore';
+
 import Searchico from '../assets/ico/search.svg';
 import Nextico from '../assets/ico/next.svg';
 
-// 1. Store를 import 합니다.
-import useHomeStore from '../stores/homeStore';
+const { width } = Dimensions.get('window');
 
 const bannerImages = [
   require('../assets/banner1.webp'),
@@ -15,34 +16,42 @@ const bannerImages = [
   require('../assets/banner4.webp'),
 ];
 
-// 2. 더 이상 부모로부터 props({ slideIndex })를 받지 않습니다.
 export default function Banner() {
-  // 3. 필요한 slideIndex 상태를 Store에서 직접 가져옵니다.
   const slideIndex = useHomeStore((state) => state.slideIndex);
+  const translateX = useSharedValue(0);
+
+  // 이미지 인덱스 변경 시 슬라이드 애니메이션
+  useEffect(() => {
+    translateX.value = withTiming(-(slideIndex - 1) * width, { duration: 400 });
+  }, [slideIndex]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: translateX.value }],
+  }));
 
   return (
-    <ImageBackground
-      // 4. Store에서 가져온 slideIndex를 사용합니다.
-      // 이미지가 없을 경우를 대비해 기본값을 설정합니다.
-      source={bannerImages[slideIndex - 1] || bannerImages[0]}
-      style={styles.bannerBackground}
-      resizeMode="cover"
-    >
-      {/* TopBar는 이미 수정되었으므로 자동으로 Store를 사용합니다. */}
-      <TopBar />
+    <View style={styles.bannerContainer}>
+      <Animated.View style={[styles.imageRow, animatedStyle]}>
+        {bannerImages.map((img, idx) => (
+          <Image key={idx} source={img} style={styles.bannerImage} />
+        ))}
+      </Animated.View>
+
       <LinearGradient
         colors={["rgba(0,0,0,0.4)", "transparent"]}
         style={styles.gradientOverlay}
       />
+
       <View style={styles.bannerTextBlock}>
         <Text style={styles.bannerTitle}>Cathay member exclusive</Text>
         <View style={styles.bannerSubRow}>
           <Text style={styles.linkText}>자세히 보기 →</Text>
         </View>
       </View>
+
       <View style={styles.searchBox}>
-        <View style={{ paddingLeft:8}}>
-          <Searchico style={{paddingLeft: 20}}/>
+        <View style={{ paddingLeft: 8 }}>
+          <Searchico />
         </View>
         <TextInput
           style={styles.searchInput}
@@ -51,21 +60,32 @@ export default function Banner() {
         />
         <Nextico />
       </View>
+
       <View style={styles.slideIndicator}>
         <Text style={styles.slideText}>{slideIndex} / 4  ⏸</Text>
       </View>
-    </ImageBackground>
+    </View>
   );
 }
 
-// ... 이하 스타일 코드는 동일
 const styles = StyleSheet.create({
-  bannerBackground: {
-    position: 'relative',
+  bannerContainer: {
     height: 410,
     paddingTop: 56,
     paddingHorizontal: 16,
     justifyContent: 'space-between',
+    overflow: 'hidden', // 슬라이드가 밖으로 튀어나가지 않게
+  },
+  imageRow: {
+    flexDirection: 'row',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+  },
+  bannerImage: {
+    width: width,
+    height: 410,
+    resizeMode: 'cover',
   },
   gradientOverlay: {
     position: 'absolute',
@@ -77,6 +97,7 @@ const styles = StyleSheet.create({
   },
   bannerTextBlock: {
     marginTop: 145,
+    zIndex: 2,
   },
   bannerTitle: {
     fontFamily: 'pretendard',
@@ -101,6 +122,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     height: 62,
+    zIndex: 2,
   },
   searchInput: {
     flex: 1,
@@ -115,6 +137,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
+    zIndex: 2,
   },
   slideText: {
     color: '#fff',
@@ -122,4 +145,3 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
-
