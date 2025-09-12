@@ -1,147 +1,118 @@
-import React, { useEffect } from 'react';
-import { View, Text, Image, StyleSheet, Dimensions, TextInput } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
-import useHomeStore from '../stores/homeStore';
-
-import Searchico from '../assets/ico/search.svg';
-import Nextico from '../assets/ico/next.svg';
+import React, { useEffect, useState } from 'react';
+import { View, Text, Image, StyleSheet, Dimensions } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  Easing,
+  interpolate,
+  runOnJS,
+  delay,
+} from 'react-native-reanimated';
 
 const { width } = Dimensions.get('window');
 
-const bannerImages = [
-  require('../assets/banner1.webp'),
-  require('../assets/banner2.webp'),
-  require('../assets/banner3.webp'),
-  require('../assets/banner4.webp'),
+const banners = [
+  { image: require('../assets/banner1.webp'), texts: ['Cathay member exclusive', '자세히 보기 →'] },
+  { image: require('../assets/banner2.webp'), texts: ['두 번째 이미지 텍스트', '자세히 보기 →'] },
+  { image: require('../assets/banner3.webp'), texts: ['세 번째 이미지 텍스트', '자세히 보기 →'] },
+  { image: require('../assets/banner4.webp'), texts: ['네 번째 이미지 텍스트', '자세히 보기 →'] },
 ];
 
-export default function Banner() {
-  const slideIndex = useHomeStore((state) => state.slideIndex);
-  const translateX = useSharedValue(0);
+export default function AnimatedBanner() {
+  const [index, setIndex] = useState(0);
+  const imageOffset = useSharedValue(0);
+  const textAnims = [useSharedValue(1), useSharedValue(1)]; // 텍스트마다 SharedValue
 
-  // 이미지 인덱스 변경 시 슬라이드 애니메이션
   useEffect(() => {
-    translateX.value = withTiming(-(slideIndex - 1) * width, { duration: 400 });
-  }, [slideIndex]);
+    const interval = setInterval(() => {
+      // 모든 텍스트 fade out
+      textAnims.forEach(anim => {
+        anim.value = withTiming(0, { duration: 300, easing: Easing.out(Easing.cubic) });
+      });
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: translateX.value }],
+      setTimeout(() => {
+        const nextIndex = (index + 1) % banners.length;
+        runOnJS(setIndex)(nextIndex);
+
+        // 이미지 이동
+        imageOffset.value = withTiming(-nextIndex * width, { duration: 500, easing: Easing.out(Easing.cubic) });
+
+        // 텍스트 순차적 fade in
+        textAnims.forEach((anim, i) => {
+          anim.value = withTiming(1, {
+            duration: 500,
+            easing: Easing.out(Easing.cubic),
+            delay: i * 200, // 두 번째 텍스트는 200ms 뒤에 등장
+          });
+        });
+      }, 300); // fade out 끝나고 nextIndex 적용
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [index]);
+
+  const animatedImageStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: imageOffset.value }]
   }));
 
   return (
-    <View style={styles.bannerContainer}>
-      <Animated.View style={[styles.imageRow, animatedStyle]}>
-        {bannerImages.map((img, idx) => (
-          <Image key={idx} source={img} style={styles.bannerImage} />
+    <View style={styles.container}>
+      <Animated.View style={[styles.slider, animatedImageStyle]}>
+        {banners.map((banner, i) => (
+          <Image key={i} source={banner.image} style={styles.image} />
         ))}
       </Animated.View>
+      <View style={styles.textContainer}>
+        {banners[index].texts.map((t, i) => {
+          const animatedTextStyle = useAnimatedStyle(() => ({
+            opacity: textAnims[i].value,
+            transform: [{ translateY: interpolate(textAnims[i].value, [0, 1], [20, 0]) }],
+          }));
 
-      <LinearGradient
-        colors={["rgba(0,0,0,0.4)", "transparent"]}
-        style={styles.gradientOverlay}
-      />
+          const textStyle = i === 0 ? styles.mainText : styles.subText;
 
-      <View style={styles.bannerTextBlock}>
-        <Text style={styles.bannerTitle}>Cathay member exclusive</Text>
-        <View style={styles.bannerSubRow}>
-          <Text style={styles.linkText}>자세히 보기 →</Text>
-        </View>
-      </View>
-
-      <View style={styles.searchBox}>
-        <View style={{ paddingLeft: 8 }}>
-          <Searchico />
-        </View>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="호텔, 명소, 도시를 검색해 보세요"
-          placeholderTextColor="#999"
-        />
-        <Nextico />
-      </View>
-
-      <View style={styles.slideIndicator}>
-        <Text style={styles.slideText}>{slideIndex} / 4  ⏸</Text>
+          return (
+            <Animated.View key={i} style={[{ marginBottom: 4 }, animatedTextStyle]}>
+              <Text style={textStyle}>{t}</Text>
+            </Animated.View>
+          );
+        })}
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  bannerContainer: {
+  container: {
     height: 410,
-    paddingTop: 56,
-    paddingHorizontal: 16,
-    justifyContent: 'space-between',
-    overflow: 'hidden', // 슬라이드가 밖으로 튀어나가지 않게
+    width: '100%',
+    overflow: 'hidden',
+    backgroundColor: '#000',
   },
-  imageRow: {
+  slider: {
     flexDirection: 'row',
-    position: 'absolute',
-    top: 0,
-    left: 0,
+    width: width * banners.length,
+    height: '100%',
   },
-  bannerImage: {
-    width: width,
-    height: 410,
+  image: {
+    width,
+    height: '100%',
     resizeMode: 'cover',
   },
-  gradientOverlay: {
+  textContainer: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 120,
-    zIndex: 0,
+    bottom: 50,
+    left: 16,
   },
-  bannerTextBlock: {
-    marginTop: 145,
-    zIndex: 2,
-  },
-  bannerTitle: {
-    fontFamily: 'pretendard',
+    mainText: {
+    fontSize: 24,       // 메인 텍스트 크기
     color: '#fff',
-    fontSize: 28,
     fontWeight: '600',
-    marginBottom: 20,
   },
-  bannerSubRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  linkText: {
+  subText: {
+    fontSize: 16,       // 서브 텍스트 크기
     color: '#fff',
-    fontSize: 16,
-  },
-  searchBox: {
-    marginBottom: 22,
-    backgroundColor: '#fff',
-    borderRadius: 30,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    height: 62,
-    zIndex: 2,
-  },
-  searchInput: {
-    flex: 1,
-    paddingLeft: 16,
-    fontSize: 14,
-  },
-  slideIndicator: {
-    position: 'absolute',
-    bottom: 120,
-    right: 20,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    zIndex: 2,
-  },
-  slideText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: 'bold',
+    fontWeight: '500',
   },
 });
