@@ -71,16 +71,16 @@ const styles = StyleSheet.create({
     wrapper: {
         backgroundColor: '#fff',
         margin: 16,
-        paddingBottom: 16,
         borderWidth: 1,
         borderColor: '#e2e2e2',
+
         marginBottom: 50,
     },
     timerRowWrap: {
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'flex-end',
-        marginTop: 30,
+        paddingTop: 30,
         paddingBottom: 20,
     },
     timerCol: {

@@ -1,3 +1,4 @@
+// Reservation.js
 import React, { useState } from 'react';
 import {
   View,
@@ -9,9 +10,9 @@ import {
   ScrollView,
   ImageBackground,
   Platform,
-  StatusBar
+  StatusBar,
+  Pressable,
 } from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
 import useBookingStore from '../stores/bookingStore';
 
 const strip = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -26,109 +27,122 @@ const InfoRow = ({ label, value, subValue, onPress }) => (
       <Text style={styles.value}>{value}</Text>
       {subValue && <Text style={styles.subValue}>{subValue}</Text>}
     </View>
-    <Ionicons name="chevron-forward-outline" size={24} color="#000" />
+    <Text style={styles.arrow}>›</Text>
   </TouchableOpacity>
 );
 
-export default function Reservation({ navigation, route }) {
+export default function Reservation({ navigation }) {
   const [activeTab, setActiveTab] = useState('객실');
 
-  // ✅ HotelSelect에서 미리 저장해둔 값 (DateSelect에서 날짜를 선택하지 않고 닫아도 유지됨)
-  const { hotelList, startDate, endDate } = useBookingStore();
+  // ✅ zustand에서 읽기
+  const hotelList = useBookingStore((s) => s.hotelList);
+  const startDate = useBookingStore((s) => s.startDate);
+  const endDate = useBookingStore((s) => s.endDate);
+  const setDates = useBookingStore((s) => s.setDates);
+  const guests = useBookingStore((s) => s.guests);
 
-  // "첫번째 호텔 외 N" 포맷터
+  // 호텔 표시
   const buildHotelDisplay = (list) => {
-    if (!list || list.length === 0) return "호텔을 선택해 주세요.";
+    if (!list || list.length === 0) return '호텔을 선택해 주세요.';
     if (list.length === 1) return list[0];
     return `${list[0]} 외 ${list.length - 1}`;
   };
-
   const hotelDisplay = buildHotelDisplay(hotelList);
 
-  // 기본값: 오늘/익일 + DateSelect에서 확정 시 덮어쓰기
+  // 날짜 기본값
   const today = strip(new Date());
   const start = startDate ?? today;
-  const end   = endDate   ?? new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+  const end = endDate ?? new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+
+  // 인원 표시
+  const summarizeGuests = (arr) => {
+    const list = (Array.isArray(arr) && arr.length > 0) ? arr : [{ adults: 2, children: 0 }];
+    const rooms = list.length;
+    const adults = list.reduce((a, r) => a + (r.adults || 0), 0);
+    const children = list.reduce((a, r) => a + (r.children || 0), 0);
+    return { rooms, adults, children };
+  };
+  const { rooms, adults, children } = summarizeGuests(guests);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ImageBackground
-        source={require('../assets/ulsan_3.webp')}
-        style={styles.header}
-        imageStyle={{ opacity: 0.5 }}
-      >
-        <View style={styles.headerOverlay} />
-        <View style={styles.headerContent}>
-          <TouchableOpacity style={styles.closeButton} onPress={() => navigation.goBack()}>
-            <Ionicons name="close-outline" size={30} color="#fff" />
-          </TouchableOpacity>
+    <View style={styles.container}>
+      {/* 본문 */}
+      <View style={{ flex: 1 }}>
+        <ImageBackground
+          source={require('../assets/ulsan_3.webp')}
+          style={styles.header}
+          imageStyle={{ opacity: 0.5 }}
+        >
+          <View style={styles.headerOverlay} />
+          <View style={styles.headerContent}>
+            <Pressable style={styles.closeBtn} onPress={() => navigation.goBack()}>
+              <Text style={styles.closeTxt}>×</Text>
+            </Pressable>
 
-          <View style={styles.tabContainer}>
-            <TouchableOpacity
-              style={[styles.tab, activeTab === '객실' && styles.activeTab]}
-              onPress={() => setActiveTab('객실')}
-            >
-              <Text style={[styles.tabText, activeTab === '객실' && styles.activeTabText]}>객실</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.tab, activeTab === '다이닝' && styles.activeTab]}
-              onPress={() => setActiveTab('다이닝')}
-            >
-              <Text style={[styles.tabText, activeTab === '다이닝' && styles.activeTabText]}>다이닝</Text>
-            </TouchableOpacity>
+            <View style={styles.tabContainer}>
+              <TouchableOpacity
+                style={[styles.tab, activeTab === '객실' && styles.activeTab]}
+                onPress={() => setActiveTab('객실')}
+              >
+                <Text style={[styles.tabText, activeTab === '객실' && styles.activeTabText]}>객실</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.tab, activeTab === '다이닝' && styles.activeTab]}
+                onPress={() => setActiveTab('다이닝')}
+              >
+                <Text style={[styles.tabText, activeTab === '다이닝' && styles.activeTabText]}>다이닝</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      </ImageBackground>
+        </ImageBackground>
 
-      <ScrollView style={styles.scrollView}>
-        <View style={styles.scrollContent}>
-          <InfoRow
-            label="호텔/지역"
-            value={hotelDisplay}
-            onPress={() => navigation.navigate('HotelSelect')}
-          />
-
+        {/* 본문 내용: 하단 버튼 높이만큼 여백 추가 */}
+        <View style={[styles.scrollContent, { paddingBottom: 80 }]}>
+          <InfoRow label="호텔/지역" value={hotelDisplay} onPress={() => navigation.navigate('HotelSelect')} />
           <InfoRow
             label="체크인/아웃"
             value={`${fmt(start)} ~ ${fmt(end)} / ${nights(start, end)}박`}
             onPress={() =>
               navigation.navigate('DateSelect', {
-                initialStart: dates.start,
-                initialEnd: dates.end,
+                initialStart: startDate ?? start,
+                initialEnd: endDate ?? end,
                 popAfterConfirm: 1,
-                onPicked: (s, e) => setDates({ start: s, end: e }),
+                onPicked: (s, e) => setDates(s, e),
               })
             }
           />
-
-          <InfoRow label="객실/인원" value="객실 1 / 성인 2, 어린이 0" />
+          <InfoRow
+            label="객실/인원"
+            value={`객실 ${rooms} / 성인 ${adults}, 어린이 ${children}`}
+            onPress={() => navigation.navigate('GuestsSelect')}
+          />
 
           <TouchableOpacity style={styles.promoContainer}>
-            <Ionicons name="pricetag-outline" size={20} color="#555" />
             <Text style={styles.promoText}>프로모션 코드</Text>
           </TouchableOpacity>
-        </View>
-      </ScrollView>
 
-      <View style={styles.bottomContainer}>
-        <View style={styles.rewardsBanner}>
-          <Image
-            source={require('../assets/rewards.jpg')}
-            style={styles.rewardsImage}
-            resizeMode="cover"
-          />
-          <View style={styles.rewardsTextContainer}>
-            <Text style={styles.rewardsText}>리워즈 회원가입하고 혜택받으세요.</Text>
+          <View style={styles.bottomContainer}>
+            <View style={styles.rewardsBanner}>
+              <Image source={require('../assets/rewards.jpg')} style={styles.rewardsImage} resizeMode="cover" />
+              <View style={styles.rewardsTextContainer}>
+                <Text style={styles.rewardsText}>리워즈 회원가입하고 혜택받으세요.</Text>
+              </View>
+            </View>
           </View>
         </View>
-
-        <View style={{ marginHorizontal: -20 }}>
-          <TouchableOpacity style={styles.searchButton}>
-            <Text style={styles.searchButtonText}>검색</Text>
-          </TouchableOpacity>
-        </View>
       </View>
-    </SafeAreaView>
+
+      {/* 하단 고정 버튼 */}
+      <View style={styles.searchButtonWrap}>
+        <Pressable
+          style={({ pressed }) => [styles.searchButton, pressed && { opacity: 0.7 }]}
+          android_ripple={{ color: '#333' }}
+          onPress={() => console.log('검색 실행')}
+        >
+          <Text style={styles.searchButtonText}>검색</Text>
+        </Pressable>
+      </View>
+    </View>
   );
 }
 
@@ -136,10 +150,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
   header: {
-    height: 120,
+    height: 150,
     position: 'relative',
     backgroundColor: '#000',
   },
@@ -155,14 +168,23 @@ const styles = StyleSheet.create({
     paddingBottom: 15,
     paddingHorizontal: 16,
   },
-  closeButton: {
-    alignSelf: 'flex-end',
+  closeBtn: {
+    position: 'absolute',
+    top: 8,
+    right: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  closeTxt: {
+    color: '#fff',
+    fontWeight: "100",
+    fontSize: 40,
   },
   tabContainer: {
     flexDirection: 'row',
     backgroundColor: 'rgba(86, 86, 86, 1)',
-    borderRadius: 30,
-    marginBottom: 6,
+    borderRadius: 20,
+    marginTop: 80,
   },
   tab: {
     paddingVertical: 11,
@@ -181,9 +203,6 @@ const styles = StyleSheet.create({
   activeTabText: {
     color: '#000',
     fontWeight: '500',
-  },
-  scrollView: {
-    flex: 1,
   },
   scrollContent: {
     padding: 20,
@@ -212,6 +231,10 @@ const styles = StyleSheet.create({
     color: '#555',
     marginTop: 4,
   },
+  arrow: {
+    fontSize: 24,
+    color: '#000',
+  },
   promoContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -225,7 +248,7 @@ const styles = StyleSheet.create({
     color: '#555',
   },
   bottomContainer: {
-    padding: 20,
+    padding: 10,
   },
   rewardsBanner: {
     height: 100,
@@ -233,11 +256,10 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     position: 'relative',
     backgroundColor: '#000',
-    marginBottom: 30,
   },
   rewardsImage: {
     width: '100%',
-    height: 80,
+    height: 100,
     opacity: 0.7,
   },
   rewardsTextContainer: {
@@ -249,15 +271,22 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
   },
+  searchButtonWrap: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+  },
   searchButton: {
-    backgroundColor: '#000',
-    padding: 18,
-    borderRadius: 0,
+    height: 60,
     alignItems: 'center',
-    width: '100%',
+    justifyContent: 'center',
+    backgroundColor: '#111',
   },
   searchButtonText: {
     color: '#fff',
     fontSize: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

@@ -53,7 +53,7 @@ export default function Bottom() {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: '#fff',
-    marginTop: 16,
+    paddingTop: 16,
   },
   sliderWrapper: {
     overflow: 'hidden',

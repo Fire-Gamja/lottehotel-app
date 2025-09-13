@@ -1,8 +1,13 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image } from 'react-native';
+import PromotionSvg from '../assets/svg/promotion.svg';
+import EventSvg from '../assets/svg/event.svg';
+import CouponSvg from '../assets/svg/coupon.svg';
+import ShopSvg from '../assets/svg/eshop.svg';
+import RecentSvg from '../assets/svg/recent.svg';
 
 function DummyIcon() {
-  return <View style={{width:45, height:45, backgroundColor:'#eee', borderRadius:12}} />;
+  return <View style={{ width: 45, height: 45, backgroundColor: '#eee', borderRadius: 12 }} />;
 }
 
 export default function Promotion() {
@@ -10,23 +15,23 @@ export default function Promotion() {
     <View style={styles.wrapper}>
       <View style={styles.iconRow}>
         <View style={styles.iconBlock}>
-          <DummyIcon />
+          <PromotionSvg width={45} height={45} />
           <Text style={styles.iconText}>프로모션</Text>
         </View>
         <View style={styles.iconBlock}>
-          <DummyIcon />
+          <EventSvg width={45} height={45} />
           <Text style={styles.iconText}>이벤트</Text>
         </View>
         <View style={styles.iconBlock}>
-          <DummyIcon />
+          <CouponSvg width={45} height={45} />
           <Text style={styles.iconText}>쿠폰</Text>
         </View>
         <View style={styles.iconBlock}>
-          <DummyIcon />
+          <ShopSvg width={45} height={45} />
           <Text style={styles.iconText}>e-SHOP</Text>
         </View>
         <View style={styles.iconBlock}>
-          <DummyIcon />
+          <RecentSvg width={45} height={45} />
           <Text style={styles.iconText}>최근 본 상품</Text>
         </View>
       </View>
@@ -46,15 +51,16 @@ export default function Promotion() {
 
 const styles = StyleSheet.create({
   wrapper: {
-    marginTop: 36,
-    marginBottom: 40,
+    paddingTop: 36,
+    paddingBottom: 40,
     paddingHorizontal: 12,
+    backgroundColor: "#fff"
   },
   iconRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 32,
+    paddingBottom: 32,
   },
   iconBlock: {
     alignItems: 'center',

@@ -12,8 +12,8 @@ import {
     Easing,
 } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import useBookingStore from '../stores/bookingStore';
-const setDates = useBookingStore((s) => s.setDates);
+import useBookingStore from "../stores/bookingStore";
+
 const { height: SCREEN_H, width: SCREEN_W } = Dimensions.get("window");
 const ACCENT = "#8a6a54";
 const DOW = ["일", "월", "화", "수", "목", "금", "토"];
@@ -45,29 +45,46 @@ function getMonthMatrix(year, month) {
 
 /* ---------- component ---------- */
 export default function DateSelect({
-    monthsToShow = 3,         // 현재 달 포함 3개월
-    onConfirm,                // (startDate, endDate)
-    onClose,                  // 닫기 콜백
-    initialStart,             // 있으면 우선 적용
+    monthsToShow = 3,   // 현재 달 포함 최대 3개월
+    onConfirm,          // (선택적) 외부 콜백
+    onClose,            // (선택적) 외부 콜백
+    initialStart,       // (선택적) props로 받은 초기값
     initialEnd,
 }) {
     const navigation = useNavigation();
     const route = useRoute();
+
+    // ✅ 훅은 컴포넌트 내부에서 호출해야 함
+    const setDates = useBookingStore((s) => s.setDates);
+
+    // route 파라미터 우선, 없으면 props 사용
     const popAfterConfirm = Number(route.params?.popAfterConfirm ?? 1);
-    const onPicked = route.params?.onPicked;
+    const routeInitialStart = route.params?.initialStart;
+    const routeInitialEnd = route.params?.initialEnd;
+
     // 오늘/익일 기본값
     const today = stripTime(new Date());
-    const defaultStart = initialStart ? stripTime(initialStart) : today;
-    const defaultEnd = initialEnd ? stripTime(initialEnd) : addDays(today, 1);
+    const defaultStart = routeInitialStart
+        ? stripTime(new Date(routeInitialStart))
+        : initialStart
+            ? stripTime(new Date(initialStart))
+            : today;
 
-    // 상한일: 현재 달 + (monthsToShow-1)개월의 말일  (3개월만 표시/선택)
+    const defaultEnd = routeInitialEnd
+        ? stripTime(new Date(routeInitialEnd))
+        : initialEnd
+            ? stripTime(new Date(initialEnd))
+            : addDays(today, 1);
+
+    // 상한일: 현재 달 + (monthsToShow-1)개월의 말일
     const cappedMonths = Math.max(1, Math.min(3, monthsToShow));
     const maxDate = stripTime(new Date(today.getFullYear(), today.getMonth() + cappedMonths, 0));
 
     const [start, setStart] = useState(defaultStart > maxDate ? maxDate : defaultStart);
     const [end, setEnd] = useState(defaultEnd > maxDate ? maxDate : defaultEnd);
     const [closing, setClosing] = useState(false);
-    // 등장/퇴장 애니메이션
+
+    // 등장 애니메이션
     const animY = useRef(new Animated.Value(SCREEN_H)).current;
     useEffect(() => {
         Animated.timing(animY, {
@@ -87,14 +104,12 @@ export default function DateSelect({
             useNativeDriver: true,
         }).start(({ finished }) => {
             if (!finished) return;
-            // route 기반으로 스스로 pop (HotelSelect에서 replace로 들어왔으면 Reservation으로 복귀)
             navigation.pop(1);
-            // 필요하면 onClose도 병행 호출
             onClose && onClose();
         });
     };
 
-    // 월 생성 (현재 달부터 cappedMonths 개)
+    // 월 리스트 생성
     const months = useMemo(() => {
         const list = [];
         for (let i = 0; i < cappedMonths; i++) {
@@ -134,16 +149,16 @@ export default function DateSelect({
             useNativeDriver: true,
         }).start(({ finished }) => {
             if (!finished) return;
-            // 먼저 콜백으로 값 전달
+            // 1) 날짜를 전역 저장
             setDates(start, end);
-            // 그리고 스택에서 제거
-            navigation.pop(popAfterConfirm);
+            // 2) DateSelect는 닫고 → GuestsSelect로 교체 (아래→위 슬라이드)
+            navigation.replace('GuestsSelect');
         });
     };
 
     return (
         <Animated.View
-            pointerEvents={closing ? "none" : "auto"}   // ✅ 닫힐 때 터치 통과
+            pointerEvents={closing ? "none" : "auto"}   // 닫힐 때 터치 통과
             style={[s.container, { transform: [{ translateY: animY }] }]}
         >
             {/* Header */}
@@ -252,9 +267,7 @@ export default function DateSelect({
                     style={[s.confirmBtn, !canConfirm && s.confirmDisabled]}
                 >
                     <Text style={s.confirmTxt}>
-                        {canConfirm
-                            ? `선택  •  ${start.getMonth() + 1}/${start.getDate()} → ${end.getMonth() + 1}/${end.getDate()}`
-                            : "선택"}
+                        선택
                     </Text>
                 </Pressable>
             </View>
@@ -273,31 +286,36 @@ const s = StyleSheet.create({
         backgroundColor: "#fff",
     },
 
-    header: { height: 112, width: "100%" },
+    header: { height: 150, width: "100%" },
     headerBg: { position: "absolute", inset: 0, width: "100%", height: "100%" },
     headerOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.35)" },
     headerBar: { position: "absolute", bottom: 0, left: 0, right: 0, paddingHorizontal: 16, paddingBottom: 12 },
     headerTitle: { color: "#fff", fontSize: 18, fontWeight: "700" },
 
     closeBtn: {
-        position: "absolute", top: 40, right: 12,
-        width: 32, height: 32, borderRadius: 16,
-        backgroundColor: "rgba(0,0,0,0.35)",
-        alignItems: "center", justifyContent: "center",
+        position: 'absolute',
+        top: 8,
+        right: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
-    closeTxt: { color: "#fff", fontSize: 18, lineHeight: 18 },
+    closeTxt: {
+        color: '#fff',
+        fontWeight: "100",
+        fontSize: 40,
+    },
 
     dowRow: {
         flexDirection: "row",
         justifyContent: "space-between",
         paddingHorizontal: 16,
-        paddingVertical: 12,
+        paddingVertical: 20,
         borderBottomWidth: 1,
         borderBottomColor: "#eee",
     },
-    dowTxt: { width: CELL_W, textAlign: "center", fontSize: 13, color: "#6b7280" },
+    dowTxt: { width: CELL_W, textAlign: "center", fontSize: 13, color: "#6b7280", fontWeight: "600" },
 
-    monthTitle: { marginTop: 14, marginBottom: 8, fontSize: 16, fontWeight: "700", color: "#111" },
+    monthTitle: { marginTop: 16, marginBottom: 15, fontSize: 16, fontWeight: "700", color: "#111" },
 
     weekRow: { flexDirection: "row", justifyContent: "space-between" },
     dayCellWrap: {
@@ -319,21 +337,18 @@ const s = StyleSheet.create({
     daySelected: { backgroundColor: ACCENT },
     dayTxt: { fontSize: 15, color: "#111" },
 
-    // 지난 날짜/상한 밖 회색 처리
     dayDisabledTxt: { color: "#c4c4c7" },
 
     bottomBar: {
         position: "absolute", left: 0, right: 0, bottom: 0,
-        backgroundColor: "#111",
-        paddingVertical: 14,
+        backgroundColor: "#fff",
+
     },
     confirmBtn: {
-        marginHorizontal: 16,
-        height: 44,
-        borderRadius: 10,
+        height: 60,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: ACCENT,
+        backgroundColor: "#111",
     },
     confirmDisabled: { backgroundColor: "#3f3f46" },
     confirmTxt: { color: "#fff", fontSize: 16, fontWeight: "700" },

@@ -72,13 +72,14 @@ const styles = StyleSheet.create({
   container: {
     padding: 16,
     backgroundColor: '#f5f5f5ff',
-    paddingBottom: 40,
+    paddingBottom: 60,
 
   },
   title: {
     fontSize: 18,
     fontWeight: '700',
     marginBottom: 16,
+    marginTop: 20,
   },
   buttonRow: {
     flexDirection: 'row',
@@ -107,9 +108,10 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   tags: {
-    marginBottom: 12,
+    marginBottom: 30,
     color: '#816C5B',
-    fontWeight: '900',
+    fontWeight: '700',
+    fontSize: 16,
   },
   thumbnailRow: {
     flexDirection: 'row',
@@ -123,9 +125,10 @@ const styles = StyleSheet.create({
     height: width * 0.2,
   },
   thumbTags: {
-    fontSize: 12,
+    fontSize: 14,
     color: '#816C5B',
-    fontWeight: '700',
-    marginTop: 4,
+    fontWeight: '600',
+    marginTop: 8,
+    lineHeight: 25,
   },
 });

@@ -14,7 +14,7 @@ export default function TopBar() {
   // Reanimated를 사용한 배경색 애니메이션
   const animatedHeaderStyle = useAnimatedStyle(() => {
     return {
-      backgroundColor: withTiming(isScrolled ? '#FFFFFF' : 'transparent', {
+      backgroundColor: withTiming(isScrolled ? '#FFFFFF' : 'rgba(255,255,255,0)', {
         duration: 200,
       }),
     };
@@ -42,7 +42,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     zIndex: 100,
     position: 'absolute',
-    top: 47,
+    top: 0,
     left: 0,
     right: 0,
     paddingHorizontal: 16,
