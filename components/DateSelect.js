@@ -18,6 +18,47 @@ const { height: SCREEN_H, width: SCREEN_W } = Dimensions.get("window");
 const ACCENT = "#8a6a54";
 const DOW = ["일", "월", "화", "수", "목", "금", "토"];
 
+// --- Currency meta & helpers ---
+const currencyOptions = [
+    { code: 'KRW', label: 'KRW-₩', symbol: '₩', decimals: 0, rateFromKRW: 1 },
+    { code: 'AUD', label: 'AUD-$', symbol: '$', decimals: 2, rateFromKRW: 0.0011 },
+    { code: 'CAD', label: 'CAD-$', symbol: '$', decimals: 2, rateFromKRW: 0.0010 },
+    { code: 'CNY', label: 'CNY-¥', symbol: '¥', decimals: 2, rateFromKRW: 0.0053 },
+    { code: 'EUR', label: 'EUR-€', symbol: '€', decimals: 2, rateFromKRW: 0.00066 },
+    { code: 'HKD', label: 'HKD-$', symbol: '$', decimals: 2, rateFromKRW: 0.0057 },
+    { code: 'JPY', label: 'JPY-¥', symbol: '¥', decimals: 0, rateFromKRW: 0.11 },
+    { code: 'RUB', label: 'RUB-₽', symbol: '₽', decimals: 2, rateFromKRW: 0.065 },
+    { code: 'USD', label: 'USD-$', symbol: '$', decimals: 2, rateFromKRW: 0.00073 },
+    { code: 'VND', label: 'VND-₫', symbol: '₫', decimals: 0, rateFromKRW: 18.5 },
+];
+
+const getCurrencyMeta = (code) => currencyOptions.find(c => c.code === code) || currencyOptions[0];
+
+const formatNumber = (n, decimals = 0) => {
+    try {
+        return Number(n).toLocaleString(undefined, { maximumFractionDigits: decimals, minimumFractionDigits: decimals });
+    } catch (e) {
+        const fixed = decimals > 0 ? Number(n).toFixed(decimals) : Math.round(Number(n)).toString();
+        return fixed.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    }
+};
+
+// Price generator: pseudo-random per date within 580,000 ~ 1,200,000 KRW
+const basePriceKRW = (d) => {
+    const seed = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+    const rand = (() => { const x = Math.sin(seed) * 10000; return x - Math.floor(x); })();
+    const min = 580000, max = 1200000;
+    const val = min + rand * (max - min);
+    return Math.round(val / 100) * 100; // round to hundreds
+};
+
+const getPriceInCurrency = (d, code) => {
+    const meta = getCurrencyMeta(code);
+    const krw = basePriceKRW(d);
+    const val = krw * meta.rateFromKRW;
+    return { amount: val, display: formatNumber(val, meta.decimals) };
+};
+
 /* ---------- utils ---------- */
 const stripTime = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
 const addDays = (d, n) => stripTime(new Date(d.getFullYear(), d.getMonth(), d.getDate() + n));
@@ -83,6 +124,9 @@ export default function DateSelect({
     const [start, setStart] = useState(defaultStart > maxDate ? maxDate : defaultStart);
     const [end, setEnd] = useState(defaultEnd > maxDate ? maxDate : defaultEnd);
     const [closing, setClosing] = useState(false);
+    const [currency, setCurrency] = useState('KRW');
+    const [showCurrencySheet, setShowCurrencySheet] = useState(false);
+    const sheetAnim = useRef(new Animated.Value(0)).current; // 0 hidden, 1 shown
 
     // 등장 애니메이션
     const animY = useRef(new Animated.Value(SCREEN_H)).current;
@@ -106,6 +150,17 @@ export default function DateSelect({
             if (!finished) return;
             navigation.pop(1);
             onClose && onClose();
+        });
+    };
+
+    // currency sheet controls
+    const openCurrencySheet = () => {
+        setShowCurrencySheet(true);
+        Animated.timing(sheetAnim, { toValue: 1, duration: 220, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
+    };
+    const closeCurrencySheet = () => {
+        Animated.timing(sheetAnim, { toValue: 0, duration: 200, easing: Easing.in(Easing.cubic), useNativeDriver: true }).start(({ finished }) => {
+            if (finished) setShowCurrencySheet(false);
         });
     };
 
@@ -156,6 +211,16 @@ export default function DateSelect({
         });
     };
 
+    // Guests summary from booking store (for notice text)
+    const guests = useBookingStore((s) => s.guests);
+    const roomsCount = Array.isArray(guests) && guests.length > 0 ? guests.length : 1;
+    const adultsCount = (Array.isArray(guests) && guests.length > 0)
+        ? guests.reduce((a, r) => a + (r.adults || 0), 0)
+        : 2;
+    const childrenCount = (Array.isArray(guests) && guests.length > 0)
+        ? guests.reduce((a, r) => a + (r.children || 0), 0)
+        : 0;
+
     return (
         <Animated.View
             pointerEvents={closing ? "none" : "auto"}   // 닫힐 때 터치 통과
@@ -175,9 +240,20 @@ export default function DateSelect({
                 <View style={s.headerBar}>
                     <Text style={s.headerTitle}>체크인/아웃</Text>
                 </View>
+                <Pressable style={s.currencyBtnAbs} onPress={openCurrencySheet}>
+                    <Text style={s.currencyTxt}>{getCurrencyMeta(currency).label} ▾</Text>
+                </Pressable>
                 <Pressable style={s.closeBtn} onPress={slideDownClose}>
                     <Text style={s.closeTxt}>×</Text>
                 </Pressable>
+            </View>
+
+            {/* 요일 */}
+            {/* 안내 문구 */}
+            <View style={s.noticeWrap}>
+                <Text style={s.noticeTxt}>
+                    객실 {roomsCount}(성인 {adultsCount}, 어린이 {childrenCount}) 기준 일자별 최저 요금입니다. 실제 예약 시 최종 금액과 다를 수 있습니다. (세금 및 봉사료 포함)
+                </Text>
             </View>
 
             {/* 요일 */}
@@ -219,16 +295,14 @@ export default function DateSelect({
 
                                     return (
                                         <View key={cIdx} style={s.dayCellWrap}>
-                                            {(inRange || selectedStart || selectedEnd) && (
-                                                <View
-                                                    style={[
-                                                        s.rangeBg,
-                                                        inRange && { borderRadius: 0 },
-                                                        selectedStart && { borderTopLeftRadius: 16, borderBottomLeftRadius: 16 },
-                                                        selectedEnd && { borderTopRightRadius: 16, borderBottomRightRadius: 16 },
-                                                        selectedStart && !end && { borderRadius: 16 },
-                                                    ]}
-                                                />
+                                            {/* range connectors */}
+                                            {inRange && (<View style={[s.rangeBg]} />)}
+                                            {selectedStart && end && (<View style={[s.rangeBg, s.rangeRightHalf]} />)}
+                                            {selectedEnd && start && (<View style={[s.rangeBg, s.rangeLeftHalf]} />)}
+
+                                            {/* start/end diamond */}
+                                            {(selectedStart || selectedEnd) && (
+                                                <View style={s.diamond} />
                                             )}
 
                                             <Pressable
@@ -237,20 +311,23 @@ export default function DateSelect({
                                                 style={[
                                                     s.dayBtn,
                                                     disabled && s.dayDisabledBtn,
-                                                    (selectedStart || selectedEnd) && s.daySelected,
                                                 ]}
                                             >
                                                 <Text
                                                     style={[
                                                         s.dayTxt,
-                                                        disabled && s.dayDisabledTxt,
-                                                        (selectedStart || selectedEnd) && { color: "#fff", fontWeight: "700" },
-                                                    ]}
-                                                >
-                                                    {date ? date.getDate() : ""}
-                                                </Text>
-                                            </Pressable>
-                                        </View>
+                                                            disabled && s.dayDisabledTxt,
+                                                            (selectedStart || selectedEnd) && { color: "#fff", fontWeight: "700" },
+                                                        ]}
+                                                    >
+                                                        {date ? date.getDate() : ""}
+                                                    </Text>
+                                                </Pressable>
+                                                {/* price */}
+                                                {date && !disabled && (
+                                                    <Text style={s.priceTxt}>{getPriceInCurrency(date, currency).display}</Text>
+                                                )}
+                                            </View>
                                     );
                                 })}
                             </View>
@@ -271,6 +348,29 @@ export default function DateSelect({
                     </Text>
                 </Pressable>
             </View>
+            {/* Currency bottom sheet */}
+            {showCurrencySheet && (
+                <>
+                    <Pressable style={s.sheetBackdrop} onPress={closeCurrencySheet} />
+                    <Animated.View
+                        style={[
+                            s.sheet,
+                            { transform: [{ translateY: sheetAnim.interpolate({ inputRange: [0,1], outputRange: [300, 0] }) }] },
+                        ]}
+                    >
+                        {currencyOptions.map((opt) => (
+                            <Pressable
+                                key={opt.code}
+                                onPress={() => { setCurrency(opt.code); closeCurrencySheet(); }}
+                                style={s.sheetItem}
+                            >
+                                <Text style={s.sheetItemTxt}>{opt.label}</Text>
+                            </Pressable>
+                        ))}
+                    </Animated.View>
+                </>
+            )}
+
         </Animated.View>
     );
 }
@@ -291,6 +391,8 @@ const s = StyleSheet.create({
     headerOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.35)" },
     headerBar: { position: "absolute", bottom: 0, left: 0, right: 0, paddingHorizontal: 16, paddingBottom: 12 },
     headerTitle: { color: "#fff", fontSize: 18, fontWeight: "700" },
+    currencyBtnAbs: { position: 'absolute', right: 16, bottom: 10, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, backgroundColor: 'rgba(0,0,0,0.25)' },
+    currencyTxt: { color: '#fff', fontSize: 13, fontWeight: '600' },
 
     closeBtn: {
         position: 'absolute',
@@ -304,6 +406,9 @@ const s = StyleSheet.create({
         fontWeight: "100",
         fontSize: 40,
     },
+
+    noticeWrap: { paddingHorizontal: 16, paddingTop: 16 },
+    noticeTxt: { color: '#666', lineHeight: 20 },
 
     dowRow: {
         flexDirection: "row",
@@ -320,12 +425,15 @@ const s = StyleSheet.create({
     weekRow: { flexDirection: "row", justifyContent: "space-between" },
     dayCellWrap: {
         width: CELL_W,
-        height: CELL_W,
+        height: CELL_W + 20,
         alignItems: "center",
         justifyContent: "center",
         position: "relative",
     },
-    rangeBg: { position: "absolute", left: 0, right: 0, top: 8, bottom: 8, backgroundColor: "#e9ddd6" },
+    rangeBg: { position: "absolute", left: -1, right: -1, top: 16, bottom: 16, backgroundColor: "#d8cec7" },
+    rangeLeftHalf: { width: '50%', left: 0, right: undefined },
+    rangeRightHalf: { width: '50%', right: 0, left: undefined },
+    diamond: { position: 'absolute', width: CELL_W - 18, height: CELL_W - 18, backgroundColor: ACCENT, transform: [{ rotate: '45deg' }], borderRadius: 10 },
 
     dayBtn: {
         width: CELL_W - 10,
@@ -334,8 +442,9 @@ const s = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
     },
-    daySelected: { backgroundColor: ACCENT },
+    daySelected: { backgroundColor: 'transparent' },
     dayTxt: { fontSize: 15, color: "#111" },
+    priceTxt: { position: 'absolute', bottom: 0, fontSize: 9, color: '#6b5a4c' },
 
     dayDisabledTxt: { color: "#c4c4c7" },
 
@@ -352,4 +461,10 @@ const s = StyleSheet.create({
     },
     confirmDisabled: { backgroundColor: "#3f3f46" },
     confirmTxt: { color: "#fff", fontSize: 16, fontWeight: "700" },
+
+    // Currency sheet
+    sheetBackdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.2)' },
+    sheet: { position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: '#fff', paddingBottom: 20, borderTopLeftRadius: 16, borderTopRightRadius: 16, paddingTop: 10 },
+    sheetItem: { paddingVertical: 16, paddingHorizontal: 20 },
+    sheetItemTxt: { fontSize: 18, color: '#111' },
 });

@@ -224,7 +224,7 @@ export default function HotelSelect({ navigation, maxSelect = 3 }) {
               s.resultsOverlay,
               {
                 top: searchBarBottom,
-                bottom: kbHeight + bottomBarHeight -33 , // 키보드+하단바 피해서
+                bottom: kbHeight + bottomBarHeight -150 , // 키보드+하단바 피해서
               },
             ]}
           >
