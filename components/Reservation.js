@@ -104,10 +104,10 @@ export default function Reservation({ navigation }) {
             value={`${fmt(start)} ~ ${fmt(end)} / ${nights(start, end)}박`}
             onPress={() =>
               navigation.navigate('DateSelect', {
-                initialStart: startDate ?? start,
-                initialEnd: endDate ?? end,
+                // pass serializable timestamps instead of Date objects/functions
+                initialStart: new Date(startDate ?? start).getTime(),
+                initialEnd: new Date(endDate ?? end).getTime(),
                 popAfterConfirm: 1,
-                onPicked: (s, e) => setDates(s, e),
               })
             }
           />
@@ -137,7 +137,7 @@ export default function Reservation({ navigation }) {
         <Pressable
           style={({ pressed }) => [styles.searchButton, pressed && { opacity: 0.7 }]}
           android_ripple={{ color: '#333' }}
-          onPress={() => console.log('검색 실행')}
+          onPress={() => navigation.navigate('SearchResults')}
         >
           <Text style={styles.searchButtonText}>검색</Text>
         </Pressable>

@@ -29,6 +29,7 @@ import Reservation from './components/Reservation';
 import HotelSelect from './components/HotelSelect';
 import DateSelect from './components/DateSelect';
 import GuestsSelect from './components/GuestsSelect'
+import SearchResults from './components/SearchResults'
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -167,6 +168,13 @@ export default function App() {
               headerShown: false,
               presentation: 'transparentModal',
               animationEnabled: false,
+            }}
+          />
+          <Stack.Screen
+            name="SearchResults"
+            component={SearchResults}
+            options={{
+              headerShown: false,
             }}
           />
         </Stack.Navigator>
