@@ -75,7 +75,7 @@ export default function Reservation({ navigation }) {
         >
           <View style={styles.headerOverlay} />
           <View style={styles.headerContent}>
-            <Pressable style={styles.closeBtn} onPress={() => navigation.goBack()}>
+            <Pressable style={styles.closeBtn} onPress={() => { try { useBookingStore.getState().saveProgressFromCurrent(); } catch (e) {} navigation.goBack(); }}>
               <Text style={styles.closeTxt}>×</Text>
             </Pressable>
 

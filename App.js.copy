@@ -17,7 +17,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // stores and components
 import useHomeStore from './stores/homeStore';
-import useBookingStore from './stores/bookingStore';
 import TopBar from './components/TopBar';
 import Banner from './components/Banner';
 import Promotion from './components/Promotion';
@@ -31,13 +30,12 @@ import HotelSelect from './components/HotelSelect';
 import DateSelect from './components/DateSelect';
 import GuestsSelect from './components/GuestsSelect'
 import SearchResults from './components/SearchResults'
-import ResumePill from './components/ResumePill'
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
 
-// --- 애니메이션 설정 ---
+// --- ?�니메이???�정 ---
 const customTransitionSpec = {
   animation: 'timing',
   config: {
@@ -57,9 +55,9 @@ function HomeScreen() {
 
   return (
     <View style={{ flex: 1 }}>
-      {/* 화면 상단에 항상 고정되는 헤더 */}
+      {/* ?�면 ?�단????�� 고정?�는 ?�더 */}
       <TopBar />
-      {/* 컨텐츠는 헤더 높이 + 안전영역만큼 아래에서 시작 */}
+      {/* 컨텐츠는 ?�더 ?�이 + ?�전?�역만큼 ?�래?�서 ?�작 */}
       <ScrollView
         style={{ flex : 1, backgroundColor: '#fff'}}
         bounces={false}
@@ -70,10 +68,7 @@ function HomeScreen() {
         }}
         scrollEventThrottle={16}
       >
-        <View style={{ position: 'relative' }}>
-          <Banner />
-          <ResumePill />
-        </View>
+        <Banner />
         <Promotion />
         <TimeSaleBanner />
         <PromotionSection />
@@ -110,21 +105,20 @@ function MainTabs() {
         ),
       })}
     >
-      <Tab.Screen name="홈" component={HomeScreen} />
-      <Tab.Screen name="호텔찾기" children={() => <DummyScreen label="호텔찾기" />} />
+      <Tab.Screen name="?? component={HomeScreen} />
+      <Tab.Screen name="?�텔찾기" children={() => <DummyScreen label="?�텔찾기" />} />
       <Tab.Screen
-        name="예약하기"
-        children={() => <DummyScreen label="예약하기" />}
+        name="?�약?�기"
+        children={() => <DummyScreen label="?�약?�기" />}
         listeners={({ navigation }) => ({
           tabPress: (e) => {
             e.preventDefault();
-            try { useBookingStore.getState().clearCurrentDraft(); } catch (err) {}
             navigation.navigate('ReservationModal');
           },
         })}
       />
-      <Tab.Screen name="예약조회" children={() => <DummyScreen label="예약조회" />} />
-      <Tab.Screen name="내정보" children={() => <DummyScreen label="내정보" />} />
+      <Tab.Screen name="?�약조회" children={() => <DummyScreen label="?�약조회" />} />
+      <Tab.Screen name="?�정�? children={() => <DummyScreen label="?�정�? />} />
     </Tab.Navigator>
   );
 }
@@ -132,7 +126,7 @@ function MainTabs() {
 export default function App() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
-      {/* ✅ 전역 상태바도 여기서 지정 */}
+      {/* ???�역 ?�태바도 ?�기??지??*/}
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       <NavigationContainer>
         <Stack.Navigator screenOptions={{ headerShown: false }}>
