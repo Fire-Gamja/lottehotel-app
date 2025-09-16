@@ -1,43 +1,36 @@
 // components/SearchResults.js (revamped UI)
 import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, Pressable } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image, Pressable, } from 'react-native';
 import useBookingStore from '../stores/bookingStore';
 import { getHotelByName } from '../stores/hotelCatalog';
 
-function getImageForCity(city) {
-  try {
-    switch (city) {
-      case '서울':
-        return require('../assets/seoul_3.webp');
-      case '부산':
-        return require('../assets/busan_3.webp');
-      case '울산':
-        return require('../assets/ulsan_3.webp');
-      case '제주':
-        return require('../assets/jeju_3.webp');
-      case '대전':
-        return require('../assets/dejeon_2.webp');
-      default:
-        return require('../assets/seoul_1.webp');
-    }
-  } catch (e) {
-    return require('../assets/seoul_1.webp');
-  }
-}
-
-function HotelSummary({ name, address, city }) {
-  const img = getImageForCity(city);
+function HotelSummary({ name, star, address, }) {
   return (
     <View style={s.hotelSummary}>
-      <Image source={img} style={s.hotelThumb} resizeMode="cover" />
       <View style={{ flex: 1, marginLeft: 12 }}>
         <Text style={s.hotelName}>{name}</Text>
-        <Text style={s.hotelInfo}>호텔성급 5성급</Text>
-        <Text style={s.hotelAddr}>{address}</Text>
-        <Text style={s.checkInfo}>체크인/아웃 · 15:00 / 11:00</Text>
-        <View style={{ flexDirection: 'row', marginTop: 10 }}>
-          <Pressable style={s.likeBtn}><Text style={s.likeTxt}>♡ 관심</Text></Pressable>
-          <Pressable style={s.fastBtn}><Text style={s.fastTxt}>최저가로 바로 예약하기 →</Text></Pressable>
+        <View style={s.hotelInfo}>
+          <Text style={{ color: '#5b5048' }}>호텔성급</Text>
+          <Text style={{ color: '#e3e3e3' }}>  |  </Text>
+          <Text style={{ color: '#5b5048' }}>{star}</Text>
+        </View>
+        <View style={s.hotelAddr}>
+          <Text style={{ color: '#5b5048' }}>주소</Text>
+          <Text style={{ color: '#e3e3e3' }}>  |  </Text>
+          <Text style={{ overflow: '' }}>{address}</Text>
+        </View>
+        <View style={s.checkInfo}>
+          <Text style={{ color: '#5b5048' }}>체크인/아웃</Text>
+          <Text style={{ color: '#e3e3e3' }}>  |  </Text>
+          <Text style={{ color: '#111' }}>15:00 / 11:00</Text>
+        </View>
+        <View style={{ flexDirection: 'column', marginTop: 10 }}>
+          <Pressable style={s.likeBtn}>
+            <Text style={s.likeTxt}>♡ 관심</Text>
+          </Pressable>
+          <Pressable style={s.fastBtn}>
+            <Text style={s.fastTxt}>최저가로 바로 예약하기 →</Text>
+          </Pressable>
         </View>
       </View>
     </View>
@@ -62,19 +55,19 @@ export default function SearchResults({ navigation }) {
         <View style={{ width: 32 }} />
       </View>
 
-      <ScrollView bounces={false} overScrollMode="never" contentContainerStyle={{ paddingBottom: 24 }}>
-        <View style={{ padding: 16 }}>
+      <ScrollView bounces={false} overScrollMode="never" contentContainerStyle={{ paddingBottom: 16 }}>
+        <View style={{ padding: 0 }}>
           {hotels[0] && (
-            <HotelSummary name={hotels[0].name} address={hotels[0].address} city={hotels[0].city} />
+            <HotelSummary name={hotels[0].name} address={hotels[0].address} star={hotels[0].star} />
           )}
 
           {/* Tabs */}
           <View style={s.tabsRow}>
-            <Pressable onPress={() => setTab('room')} style={[s.tabBtn, tab==='room' && s.tabActive]}>
-              <Text style={[s.tabTxt, tab==='room' && s.tabTxtActive]}>룸 프로모션</Text>
+            <Pressable onPress={() => setTab('room')} style={[s.tabLBtn, tab === 'room' && s.tabActive]}>
+              <Text style={[s.tabTxt, tab === 'room' && s.tabTxtActive]}>룸 프로모션</Text>
             </Pressable>
-            <Pressable onPress={() => setTab('pkg')} style={[s.tabBtn, tab==='pkg' && s.tabActive]}>
-              <Text style={[s.tabTxt, tab==='pkg' && s.tabTxtActive]}>패키지</Text>
+            <Pressable onPress={() => setTab('pkg')} style={[s.tabRBtn, tab === 'pkg' && s.tabActive]}>
+              <Text style={[s.tabTxt, tab === 'pkg' && s.tabTxtActive]}>패키지</Text>
             </Pressable>
           </View>
 
@@ -85,17 +78,17 @@ export default function SearchResults({ navigation }) {
             <Pressable style={s.filterChip}><Text>전망타입 ▾</Text></Pressable>
             <Pressable style={[s.filterChip, { width: 34 }]}><Text>↻</Text></Pressable>
           </View>
-          <View style={{ flexDirection:'row', alignItems:'center', marginTop: 10 }}>
-            <Pressable style={s.taxCheck}><Text style={{ color:'#fff', fontWeight:'700' }}>✓</Text></Pressable>
-            <Text style={{ marginLeft: 8, color:'#5b5048' }}>세금, 봉사료 포함 보기</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', paddingLeft: 16, paddingTop: 12, paddingBottom: 16 }}>
+            <Pressable style={s.taxCheck}><Text style={{ color: '#fff', fontWeight: '700' }}>✓</Text></Pressable>
+            <Text style={{ marginLeft: 8, color: '#5b5048' }}>세금, 봉사료 포함 보기</Text>
           </View>
         </View>
 
         {/* Room list */}
         <View style={{ paddingHorizontal: 16 }}>
-          {[1,2,3].map((n) => (
+          {[1, 2, 3].map((n) => (
             <View key={n} style={s.roomCard}>
-              <View style={{ flexDirection:'row', alignItems:'center', marginBottom:8 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
                 <Text style={s.roomTitle}>그랜드 디럭스 더블 액세서블 룸</Text>
               </View>
               <View style={s.memberBox}><Text style={s.memberTxt}>리워즈 회원요금{String.fromCharCode(10)}787,710 KRW</Text></View>
@@ -122,24 +115,25 @@ const s = StyleSheet.create({
   backBtn: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
   backTxt: { fontSize: 22, color: '#111' },
 
-  hotelSummary: { flexDirection: 'row', backgroundColor: '#fff', borderRadius: 8, overflow: 'hidden', borderWidth: 1, borderColor: '#eee' },
+  hotelSummary: { backgroundColor: '#eee' },
   hotelThumb: { width: 110, height: 110 },
   hotelName: { fontSize: 18, fontWeight: '700', color: '#111' },
-  hotelInfo: { color: '#816C5B', marginTop: 4 },
-  hotelAddr: { color: '#666', marginTop: 4 },
-  checkInfo: { color: '#666', marginTop: 4 },
-  likeBtn: { paddingHorizontal: 14, paddingVertical: 10, borderWidth: 1, borderColor: '#eee', borderRadius: 6, marginRight: 8 },
+  hotelInfo: { flexDirection: 'row', marginTop: 15 },
+  hotelAddr: { flexDirection: 'row', marginTop: 10 },
+  checkInfo: { flexDirection: 'row', marginTop: 10 },
+  likeBtn: { paddingHorizontal: 14, paddingVertical: 10, alignItems: "center", borderWidth: 1, borderColor: '#111', borderRadius: 6, marginRight : 16, marginTop: 8},
   likeTxt: { color: '#444' },
-  fastBtn: { paddingHorizontal: 14, paddingVertical: 10, backgroundColor: '#c96e45', borderRadius: 6 },
-  fastTxt: { color: '#fff', fontWeight: '700' },
+  fastBtn: { paddingHorizontal: 14, paddingVertical: 12, backgroundColor: '#c96e45', borderRadius: 6, marginRight : 16, marginTop: 16 },
+  fastTxt: { color: '#fff', fontWeight: '700', alignSelf: "center" },
 
-  tabsRow: { flexDirection: 'row', marginTop: 16 },
-  tabBtn: { paddingVertical: 8, paddingHorizontal: 12, borderRadius: 18, borderWidth: 1, borderColor: '#ddd', marginRight: 8 },
+  tabsRow: { flexDirection: 'row', marginTop: 16, justifyContent: 'space-between', paddingLeft: 16, paddingRight: 16 },
+  tabLBtn: { paddingVertical: 13, paddingHorizontal: 60, borderTopLeftRadius: 8, borderBottomLeftRadius: 8, borderWidth: 1, borderColor: '#ddd', },
+  tabRBtn: { paddingVertical: 13, paddingHorizontal: 66.6, borderTopRightRadius: 8, borderBottomRightRadius: 8, borderWidth: 1, borderColor: '#ddd', },
   tabActive: { backgroundColor: '#000', borderColor: '#000' },
   tabTxt: { color: '#000' },
   tabTxtActive: { color: '#fff', fontWeight: '600' },
 
-  filtersRow: { flexDirection: 'row', marginTop: 12, gap: 8, flexWrap: 'wrap' },
+  filtersRow: { flexDirection: 'row', marginTop: 12, gap: 8, flexWrap: 'wrap', paddingLeft: 16, paddingRight: 16  },
   filterChip: { paddingHorizontal: 12, paddingVertical: 8, borderWidth: 1, borderColor: '#ddd', borderRadius: 8 },
   taxCheck: { width: 18, height: 18, borderRadius: 4, backgroundColor: '#8a6a54', alignItems: 'center', justifyContent: 'center' },
 
@@ -152,4 +146,3 @@ const s = StyleSheet.create({
   roomCta: { alignSelf: 'flex-start', marginTop: 10, paddingHorizontal: 10, paddingVertical: 8, borderRadius: 6, backgroundColor: '#111' },
   roomCtaTxt: { color: '#fff', fontWeight: '600' },
 });
-

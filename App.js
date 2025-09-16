@@ -61,7 +61,7 @@ function HomeScreen() {
       <TopBar />
       {/* 컨텐츠는 헤더 높이 + 안전영역만큼 아래에서 시작 */}
       <ScrollView
-        style={{ flex : 1, backgroundColor: '#fff'}}
+        style={{ flex: 1, backgroundColor: '#fff' }}
         bounces={false}
         overScrollMode="never"
         onScroll={(event) => {
@@ -118,7 +118,7 @@ function MainTabs() {
         listeners={({ navigation }) => ({
           tabPress: (e) => {
             e.preventDefault();
-            try { useBookingStore.getState().clearCurrentDraft(); } catch (err) {}
+            try { useBookingStore.getState().clearCurrentDraft(); } catch (err) { }
             navigation.navigate('ReservationModal');
           },
         })}
@@ -179,8 +179,14 @@ export default function App() {
           <Stack.Screen
             name="SearchResults"
             component={SearchResults}
+            style={{
+              margin: 0,
+              padding: 0,
+            }}
             options={{
               headerShown: false,
+              presentation: 'transparentModal',
+              animationEnabled: false,
             }}
           />
         </Stack.Navigator>

@@ -23,7 +23,7 @@ export default function ResumePill() {
 }
 
 const styles = StyleSheet.create({
-  wrap: { position: 'absolute', left: 100, top: 70 },
+  wrap: { position: 'absolute', left: 110, top: 70 },
   pill: { backgroundColor: '#fff', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 22, shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 4 },
   pillTxt: { color: '#111', fontWeight: '700' },
 });
