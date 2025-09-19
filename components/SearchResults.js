@@ -1,5 +1,4 @@
-﻿// components/SearchResults.js
-import React, { useMemo, useState, useCallback, memo } from "react";
+﻿import React, { useMemo, useState, useCallback, memo, useRef } from "react";
 import {
   View,
   Text,
@@ -9,6 +8,7 @@ import {
   FlatList,
   Dimensions,
 } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 import Color from "../components/styles/color";
 import useBookingStore from "../stores/bookingStore";
 import { getHotelByName } from "../stores/hotelCatalog";
@@ -264,27 +264,31 @@ const RoomCard = memo(function RoomCard({
 
 /* ===================== 화면 ===================== */
 export default function SearchResults() {
-  const hotel = useBookingStore(s => s.hotel);
+  const navigation = useNavigation();
+  const hotelList = useBookingStore(s => s.hotelList);
+  const hotel = hotelList.length > 0 ? hotelList[0] : "";
   const baseFromStore = useBookingStore(s => s.price);
 
   // 호텔 이름
   const roomsByHotel = useRoomsStore(s => s.roomsByHotel);
   const hotelName = useMemo(() => {
-    const h = typeof hotel === "string" ? hotel : hotel?.name;
-    if (h && roomsByHotel && roomsByHotel[h]) return h;       // 선택 호텔이 스토어 키와 일치
-    const first = roomsByHotel ? Object.keys(roomsByHotel)[0] : undefined;
-    return first || "";                                       // 키가 없으면 빈 문자열
-  }, [hotel, roomsByHotel]);
-  const rooms = useMemo(() => (roomsByHotel?.[hotelName] || EMPTY), [roomsByHotel, hotelName]);
+    if (typeof hotel === "string") return hotel.trim();
+    if (hotel?.name) return hotel.name.trim();
+    return "";
+  }, [hotel]);
+  const EMPTY = useRef([]).current; // 항상 동일 참조
+  const rooms = useMemo(() => roomsByHotel?.[hotelName] ?? EMPTY, [roomsByHotel, hotelName]);
   // 기준가: DateSelect.js에서 온 값, 없으면 안전한 fallback
-  const basePrice = useMemo(
-    () => (typeof baseFromStore === "number" ? baseFromStore : 180000),
-    [baseFromStore]
-  );
+  const basePrice = useMemo(() => {
+    const n = typeof baseFromStore === "string" ? parseInt(baseFromStore, 10) : baseFromStore;
+    return Number.isFinite(n) ? n : 180000; // index 0 카드가 DateSelect 금액과 동일
+  }, [baseFromStore]);
 
   const [tab, setTab] = useState("room");
   const [taxIncluded, setTaxIncluded] = useState(true);
-
+  console.log("hotel from bookingStore:", hotel);
+  console.log("resolved hotelName:", hotelName);
+  console.log("roomsByHotel keys:", Object.keys(roomsByHotel || {}));
   const renderItem = useCallback(
     ({ item, index }) => (
       <RoomCard
@@ -311,9 +315,17 @@ export default function SearchResults() {
   return (
     <View style={s.screen}>
       {/* ⬆️ 상단 헤더는 고정 */}
-      <Header onBack={() => { }} />
+      <Header
+        onBack={() => {
+          try {
+            useBookingStore.getState().saveProgressFromCurrent();
+          } catch (e) {
+            console.log("saveProgress error:", e);
+          }
+          navigation.goBack();
+        }}
+      />
 
-      {/* ⬇️ 헤더 아래의 모든 섹션(예약정보~필터바~카드)을 FlatList 안으로 */}
       <FlatList
         data={rooms}
         keyExtractor={(it, idx) => `${it.id || it.name}-${idx}`}
