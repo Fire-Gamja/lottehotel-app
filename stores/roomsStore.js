@@ -6,8 +6,8 @@ const DEFAULT_ROOMS = {
     "시그니엘 서울": [
         {
             id: "grand-double-city-view-bath",
-            name: "그랜드 더블 시티뷰",
-            type: "더블",
+            name: "그랜드 시티뷰",
+            type: "더블(킹 사이즈), 트윈",
             view: "시티",
             size: "40~50㎡",
             remaining: 1,
@@ -15,8 +15,8 @@ const DEFAULT_ROOMS = {
         }, 
         {
             id: "grand-double-city-view-bath",
-            name: "그랜드 더블 리버뷰",
-            type: "더블",
+            name: "그랜드 리버뷰",
+            type: "더블(킹 사이즈), 트윈",
             view: "리버",
             size: "40~50㎡",
             remaining: 2,
@@ -24,8 +24,8 @@ const DEFAULT_ROOMS = {
         },
         {
             id: "premier-double-city-view",
-            name: "프리미어 더블 시티뷰",
-            type: "더블",
+            name: "프리미어 시티뷰",
+            type: "더블(킹 사이즈), 트윈",
             view: "시티",
             size: "46~60㎡",
             remaining: 3,
@@ -33,8 +33,8 @@ const DEFAULT_ROOMS = {
         },
         {
             id: "premier-double-river-view",
-            name: "프리미어 더블 리버뷰",
-            type: "더블",
+            name: "프리미어 리버뷰",
+            type: "더블(킹 사이즈), 트윈",
             view: "리버",
             size: "46~60㎡",
             remaining: 4,
@@ -42,8 +42,8 @@ const DEFAULT_ROOMS = {
         },
         {
             id: "deluxe-twin-city",
-            name: "디럭스 트윈 시티뷰",
-            type: "트윈",
+            name: "디럭스 시티뷰",
+            type: "더블(킹 사이즈), 트윈",
             view: "시티",
             size: "40㎡",
             remaining: 5,
@@ -51,8 +51,8 @@ const DEFAULT_ROOMS = {
         },
         {
             id: "suite-double-river",
-            name: "스위트 더블 리버뷰",
-            type: "더블",
+            name: "스위트 리버뷰",
+            type: "더블(킹 사이즈), 트윈",
             view: "리버",
             size: "55㎡",
             remaining: 2,

@@ -16,7 +16,7 @@ import useRoomsStore from "../stores/roomsStore";
 
 const { width } = Dimensions.get("window");
 const H_PADDING = 16;
-const THUMB_W = width - H_PADDING * 2;
+const THUMB_W = width - H_PADDING*2;
 const THUMB_H = Math.round((THUMB_W * 9) / 16);
 
 // 금액 포맷
@@ -173,6 +173,9 @@ const FiltersBar = memo(function FiltersBar({ taxIncluded, onToggleTax }) {
         <Check checked={taxIncluded} />
         <Text style={s.taxTxt}>세금,봉사료 포함 보기</Text>
       </Pressable>
+      <View>
+        <Text style={{paddingBottom: 16}}>평균가/1박요금</Text>
+      </View>
     </View>
   );
 });
@@ -183,6 +186,7 @@ const RoomCard = memo(function RoomCard({
   index,
   basePrice,
   taxIncluded,
+  onSelectOption,
 }) {
   // 객실이 아래로 갈수록 20% 증가
   const adjusted = useMemo(
@@ -234,7 +238,11 @@ const RoomCard = memo(function RoomCard({
           </View>
 
           {/* 버튼1: 채움(primary) 중앙정렬 · 금액 굵게(700) 흰색 */}
-          <Pressable accessibilityRole="button" style={s.btnPrimary}>
+          <Pressable
+            accessibilityRole="button"
+            style={s.btnPrimary}
+            onPress={() => onSelectOption?.("rewards", room, visiblePrice)}
+          >
             <Text style={s.btnPrimaryLbl}>리워즈 회원 요금</Text>
             <Text style={s.btnPrimaryPrice}>{`₩${fmtKRW(
               visiblePrice
@@ -242,7 +250,11 @@ const RoomCard = memo(function RoomCard({
           </Pressable>
 
           {/* 버튼2: 외곽선(primary) 배경 없음 · 라벨/금액 검정 · 금액 700 · 중앙정렬 */}
-          <Pressable accessibilityRole="button" style={s.btnOutline}>
+          <Pressable
+            accessibilityRole="button"
+            style={s.btnOutline}
+            onPress={() => onSelectOption?.("normal", room, visiblePrice)}
+          >
             <Text style={s.btnOutlineLbl}>일반요금</Text>
             <Text style={s.btnOutlinePrice}>{`₩${fmtKRW(
               visiblePrice
@@ -284,6 +296,19 @@ export default function SearchResults() {
     return Number.isFinite(n) ? n : 180000; // index 0 카드가 DateSelect 금액과 동일
   }, [baseFromStore]);
 
+  const handleOpenOptions = useCallback(
+    (priceType, room, price) => {
+      navigation.navigate("OptionSelection", {
+        priceType,
+        room,
+        summary: {
+          hotelName: hotelName || room?.hotelName || room?.name || "",
+          amount: fmtKRW(price),
+        },
+      });
+    },
+    [navigation, hotelName]
+  );
   const [tab, setTab] = useState("room");
   const [taxIncluded, setTaxIncluded] = useState(true);
   console.log("hotel from bookingStore:", hotel);
@@ -296,9 +321,10 @@ export default function SearchResults() {
         index={index}
         basePrice={basePrice}
         taxIncluded={taxIncluded}
+        onSelectOption={handleOpenOptions}
       />
     ),
-    [basePrice, taxIncluded]
+    [basePrice, taxIncluded, handleOpenOptions]
   );
   const listHeader = useMemo(() => (
     <View>
@@ -399,7 +425,7 @@ const s = StyleSheet.create({
   // 상단 CTA
   topCta: {
     marginTop: 10,
-    marginHorizontal: H_PADDING,
+    // marginHorizontal: H_PADDING,
     backgroundColor: "#D06E41",
     borderRadius: 8,
     paddingVertical: 12,
@@ -409,7 +435,7 @@ const s = StyleSheet.create({
   topCtaTxt: { color: "#fff", fontWeight: "800", fontSize: 14 },
 
   // 탭
-  tabsRow: { marginTop: 12, marginHorizontal: H_PADDING, flexDirection: "row", gap: 8 },
+  tabsRow: { marginTop: 12, flexDirection: "row", gap: 8 },
   tabBtn: { flex: 1, height: 40, borderRadius: 8, alignItems: "center", justifyContent: "center" },
   tabOn: { backgroundColor: "#111" },
   tabOff: { backgroundColor: "#eee" },
@@ -418,7 +444,7 @@ const s = StyleSheet.create({
   tabTxtOff: { color: "#555" },
 
   // 필터/정렬
-  filterWrap: { marginTop: 10, marginHorizontal: H_PADDING },
+  filterWrap: { marginTop: 10, },
   filterRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   chip: {
     height: 32,
@@ -531,3 +557,11 @@ const s = StyleSheet.create({
   qCircle: { width: 18, height: 18, borderRadius: 9, borderWidth: 1, borderColor: "#bbb", alignItems: "center", justifyContent: "center" },
   qTxt: { color: "#777", fontWeight: "700", fontSize: 12 },
 });
+
+
+
+
+
+
+
+

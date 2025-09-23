@@ -1,4 +1,4 @@
-// App.js
+﻿// App.js
 import React, { useEffect } from 'react';
 import {
   View,
@@ -7,13 +7,12 @@ import {
   ScrollView,
   Platform,
   StatusBar,
-  Easing
+  Easing,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator, CardStyleInterpolators } from '@react-navigation/stack';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // stores and components
 import useHomeStore from './stores/homeStore';
@@ -29,15 +28,22 @@ import Bottom from './components/Bottom';
 import Reservation from './components/Reservation';
 import HotelSelect from './components/HotelSelect';
 import DateSelect from './components/DateSelect';
-import GuestsSelect from './components/GuestsSelect'
-import SearchResults from './components/SearchResults'
-import ResumePill from './components/ResumePill'
+import GuestsSelect from './components/GuestsSelect';
+import SearchResults from './components/SearchResults';
+import OptionSelection from './components/OptionSelection';
+import ResumePill from './components/ResumePill';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
+const TAB_LABELS = {
+  Home: '\uD648',
+  FindHotel: '\uD638\uD154\uCC3E\uAE30',
+  ReservationEntry: '\uC608\uC57D\uD558\uAE30',
+  BookingLookup: '\uC608\uC57D\uC870\uD68C',
+  MyPage: '\uB9C8\uC774\uD398\uC774\uC9C0',
+};
 
-// --- 애니메이션 설정 ---
 const customTransitionSpec = {
   animation: 'timing',
   config: {
@@ -57,11 +63,10 @@ function HomeScreen() {
 
   return (
     <View style={{ flex: 1 }}>
-      {/* 화면 상단에 항상 고정되는 헤더 */}
       <TopBar />
-      {/* 컨텐츠는 헤더 높이 + 안전영역만큼 아래에서 시작 */}
       <ScrollView
         style={{ flex: 1, backgroundColor: '#fff' }}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}
         bounces={false}
         overScrollMode="never"
         onScroll={(event) => {
@@ -101,7 +106,7 @@ function MainTabs() {
         tabBarLabel: ({ focused }) => (
           <View style={{ marginTop: 10, alignItems: 'center' }}>
             <Text style={{ fontSize: 13, color: focused ? '#000' : '#aaa' }}>
-              {route.name}
+              {TAB_LABELS[route.name] ?? route.name}
             </Text>
           </View>
         ),
@@ -110,21 +115,25 @@ function MainTabs() {
         ),
       })}
     >
-      <Tab.Screen name="홈" component={HomeScreen} />
-      <Tab.Screen name="호텔찾기" children={() => <DummyScreen label="호텔찾기" />} />
+      <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen name="FindHotel" children={() => <DummyScreen label={TAB_LABELS.FindHotel} />} />
       <Tab.Screen
-        name="예약하기"
-        children={() => <DummyScreen label="예약하기" />}
+        name="ReservationEntry"
+        children={() => <DummyScreen label={TAB_LABELS.ReservationEntry} />}
         listeners={({ navigation }) => ({
           tabPress: (e) => {
             e.preventDefault();
-            try { useBookingStore.getState().clearCurrentDraft(); } catch (err) { }
+            try {
+              useBookingStore.getState().clearCurrentDraft();
+            } catch (err) {
+              // ignore
+            }
             navigation.navigate('ReservationModal');
           },
         })}
       />
-      <Tab.Screen name="예약조회" children={() => <DummyScreen label="예약조회" />} />
-      <Tab.Screen name="내정보" children={() => <DummyScreen label="내정보" />} />
+      <Tab.Screen name="BookingLookup" children={() => <DummyScreen label={TAB_LABELS.BookingLookup} />} />
+      <Tab.Screen name="MyPage" children={() => <DummyScreen label={TAB_LABELS.MyPage} />} />
     </Tab.Navigator>
   );
 }
@@ -132,7 +141,6 @@ function MainTabs() {
 export default function App() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
-      {/* ✅ 전역 상태바도 여기서 지정 */}
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       <NavigationContainer>
         <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -179,14 +187,20 @@ export default function App() {
           <Stack.Screen
             name="SearchResults"
             component={SearchResults}
-            style={{
-              margin: 0,
-              padding: 0,
-            }}
             options={{
               headerShown: false,
               presentation: 'transparentModal',
               animationEnabled: false,
+            }}
+          />
+          <Stack.Screen
+            name="OptionSelection"
+            component={OptionSelection}
+            options={{
+              headerShown: false,
+              presentation: 'modal',
+              animationEnabled: true,
+              cardStyleInterpolator: CardStyleInterpolators.forVerticalIOS,
             }}
           />
         </Stack.Navigator>
