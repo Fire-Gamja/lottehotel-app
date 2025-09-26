@@ -1,4 +1,4 @@
-﻿import React, { useMemo } from "react";
+﻿import React, { memo } from "react";
 import {
   SafeAreaView,
   View,
@@ -8,6 +8,7 @@ import {
   ScrollView,
 } from "react-native";
 import Color from "./styles/color";
+import useBookingStore from "../stores/bookingStore";
 
 const DEFAULT_OPTIONS = [
   { id: "breakfast", title: "조식" },
@@ -23,95 +24,64 @@ const DEFAULT_SUMMARY = {
   actionLabel: "건너뛰기",
 };
 
-const OptionSelection = ({
-  navigation,
-  route,
-  currentStep = 3,
-  totalSteps = 4,
-  options,
-  summary,
-}) => {
-  const params = route?.params || {};
-  const resolvedStep = params.currentStep ?? currentStep;
-  const resolvedTotal = params.totalSteps ?? totalSteps;
-  const optionItems = params.options || options || DEFAULT_OPTIONS;
-  const bookingSummary = {
-    ...DEFAULT_SUMMARY,
-    ...summary,
-    ...(params.summary || {}),
-  };
+const H_PADDING = 16;
 
-  const steps = useMemo(() => {
-    return new Array(resolvedTotal).fill(null).map((_, index) => {
-      const number = index + 1;
-      if (number < resolvedStep) {
-        return "past";
-      }
-      if (number === resolvedStep) {
-        return "current";
-      }
-      return "future";
-    });
-  }, [resolvedStep, resolvedTotal]);
-
-  const handleBack = () => {
-    if (navigation?.canGoBack?.()) {
-      navigation.goBack();
-    }
-  };
-
-  const handleDismiss = () => {
-    if (navigation?.canGoBack?.()) {
-      navigation.goBack();
-    }
-  };
-
+const Header = memo(function Header({ onBack }) {
   return (
-    <SafeAreaView style={styles.safe}>
-      <View style={styles.header}>
-        <View style={styles.topBar}>
-          <Pressable
-            accessibilityRole="button"
-            onPress={handleBack}
-            style={styles.iconButton}
-          >
-            <Text style={styles.iconText}>{"<"}</Text>
-          </Pressable>
+    <View style={styles.headerWrap}>
+      <View style={styles.headerRow}>
+        <Pressable accessibilityRole="button" onPress={onBack} style={styles.iconBtn}>
+          <Text style={styles.iconTxt}>←</Text>
+        </Pressable>
+        {/* Center title intentionally left empty */}
+        <Pressable accessibilityRole="button" style={styles.iconBtn}>
+          <Text style={styles.iconTxt}>≡</Text>
+        </Pressable>
+      </View>
 
-          <Pressable accessibilityRole="button" style={styles.iconButton}>
-            <Text style={styles.iconText}>{"≡"}</Text>
-          </Pressable>
-        </View>
-
-        <View style={styles.stepRow}>
-          <Text style={styles.stepLabel}>옵션 선택</Text>
-          <View style={styles.stepDots}>
-            {steps.map((state, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.stepDot,
-                  state === "past" && styles.stepDotPast,
-                  state === "current" && styles.stepDotCurrent,
-                  state === "future" && styles.stepDotFuture,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.stepNumber,
-                    state === "current" && styles.stepNumberCurrent,
-                    state === "past" && styles.stepNumberPast,
-                    state === "future" && styles.stepNumberFuture,
-                  ]}
-                >
-                  {index + 1}
-                </Text>
-              </View>
-            ))}
+      <View style={styles.stepRow}>
+        <Text style={styles.stepLabel}>객실 선택</Text>
+        <View style={styles.stepDots}>
+          <View style={[styles.stepDot, styles.stepPast]}>
+            <Text style={styles.stepNumPast}>1</Text>
+          </View>
+          <View style={[styles.stepDot, styles.stepPast]}>
+            <Text style={styles.stepNumPast}>2</Text>
+          </View>
+          <View style={[styles.stepDot, styles.stepCurrent]}>
+            <Text style={styles.stepNumCurrent}>3</Text>
+          </View>
+          <View style={[styles.stepDot, styles.stepFuture]}>
+            <Text style={styles.stepNumFuture}>4</Text>
           </View>
         </View>
       </View>
+    </View>
+  );
+});
 
+const OptionSelection = ({ navigation }) => {
+  // Use your real state/store here, fallback to defaults for now
+  const optionItems = DEFAULT_OPTIONS;
+  const bookingSummary = DEFAULT_SUMMARY;
+
+  const handleDismiss = () => {
+    // Handle dismiss action, e.g., navigate or update state
+    navigation.goBack();
+  };
+
+  return (
+    <View style={styles.screen}>
+      <Header
+        onBack={() => {
+          try {
+            useBookingStore.getState().saveProgressFromCurrent();
+          } catch (e) {
+            console.log("saveProgress error:", e);
+          }
+          navigation.goBack();
+        }}
+      />
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.sectionHead}>
           <Text style={styles.sectionTitle}>옵션 선택</Text>
@@ -152,94 +122,48 @@ const OptionSelection = ({
         <Pressable
           accessibilityRole="button"
           style={styles.summaryAction}
-          onPress={handleDismiss}
+          onPress={[handleDismiss]}
         >
           <Text style={styles.summaryActionText}>
             {bookingSummary.actionLabel}
           </Text>
         </Pressable>
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 
 export default OptionSelection;
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 16,
-    backgroundColor: "#fff",
-  },
-  topBar: {
+  // ... your styles as provided
+  screen: { flex: 1, backgroundColor: "#fff" },
+  headerWrap: { paddingHorizontal: H_PADDING, paddingTop: 8, backgroundColor: "#fff" },
+  headerRow: {
+    height: 48,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 16,
   },
-  iconButton: {
-    width: 40,
-    height: 40,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  iconText: {
-    fontSize: 24,
-    color: Color.text?.black || "#111",
-  },
+  iconBtn: { width: 24, height: 24, borderRadius: 14, alignItems: "center", justifyContent: "center" },
+  iconTxt: { fontSize: 24, color: Color.text?.black || "#111" },
+
   stepRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    marginTop: 6,
+    marginBottom: 6,
   },
-  stepLabel: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: Color.text?.black || "#111",
-  },
-  stepDots: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  stepDot: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  stepDotPast: {
-    borderWidth: 1,
-    borderColor: Color.text?.black || "#111",
-    backgroundColor: "#fff",
-  },
-  stepDotCurrent: {
-    backgroundColor: Color.primary || "#978773",
-  },
-  stepDotFuture: {
-    borderWidth: 1,
-    borderColor: "#ddd",
-    backgroundColor: "#f1f1f1",
-  },
-  stepNumber: {
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  stepNumberPast: {
-    color: Color.text?.black || "#111",
-  },
-  stepNumberCurrent: {
-    color: "#fff",
-  },
-  stepNumberFuture: {
-    color: "#bbb",
-  },
+  stepLabel: { color: "#5b5048", fontSize: 12, fontWeight: "600" },
+  stepDots: { flexDirection: "row", alignItems: "center", gap: 8 },
+  stepDot: { width: 24, height: 24, borderRadius: 12, alignItems: "center", justifyContent: "center" },
+  stepPast: { borderWidth: 1, borderColor: Color.primary || "#978773", backgroundColor: "transparent" },
+  stepCurrent: { backgroundColor: Color.primary || "#978773" },
+  stepFuture: { backgroundColor: "#d9d9d9" },
+  stepNumPast: { color: Color.primary || "#978773", fontWeight: "700", fontSize: 12 },
+  stepNumCurrent: { color: "#fff", fontWeight: "800", fontSize: 12 },
+  stepNumFuture: { color: "#777", fontWeight: "700", fontSize: 12 },
   content: {
     paddingHorizontal: 20,
     paddingTop: 8,
