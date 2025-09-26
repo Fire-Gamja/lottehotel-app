@@ -32,6 +32,7 @@ import GuestsSelect from './components/GuestsSelect';
 import SearchResults from './components/SearchResults';
 import OptionSelection from './components/OptionSelection';
 import ResumePill from './components/ResumePill';
+import PayPage from './components/PayPage';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -201,6 +202,15 @@ export default function App() {
               presentation: 'modal',
               animationEnabled: true,
               cardStyleInterpolator: CardStyleInterpolators.forVerticalIOS,
+            }}
+          />
+          <Stack.Screen
+            name="PayPage"
+            component={PayPage}
+            options={{
+              headerShown: false,
+              presentation: 'modal',
+              animationEnabled: true,
             }}
           />
         </Stack.Navigator>

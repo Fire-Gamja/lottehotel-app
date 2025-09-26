@@ -1,31 +1,22 @@
-﻿import React, { memo } from "react";
+﻿import React, { memo, useState } from "react";
 import {
-  SafeAreaView,
   View,
   Text,
   StyleSheet,
   Pressable,
   ScrollView,
 } from "react-native";
+import { useRoute, useNavigation } from "@react-navigation/native";
 import Color from "./styles/color";
 import useBookingStore from "../stores/bookingStore";
 
 const DEFAULT_OPTIONS = [
-  { id: "breakfast", title: "조식" },
+  { id: "breakfast", title: "조식", price: 63000 },
 ];
-
-const DEFAULT_SUMMARY = {
-  hotelName: "시그니엘 서울",
-  period: "09월 19일(금) ~ 09월 20일(토) / 1박",
-  guestInfo: "객실 1 / 성인 2, 어린이 0",
-  totalLabel: "총 요금",
-  amount: "1,028,500",
-  currency: "KRW",
-  actionLabel: "건너뛰기",
-};
 
 const H_PADDING = 16;
 
+/* =================== 헤더 =================== */
 const Header = memo(function Header({ onBack }) {
   return (
     <View style={styles.headerWrap}>
@@ -33,14 +24,13 @@ const Header = memo(function Header({ onBack }) {
         <Pressable accessibilityRole="button" onPress={onBack} style={styles.iconBtn}>
           <Text style={styles.iconTxt}>←</Text>
         </Pressable>
-        {/* Center title intentionally left empty */}
         <Pressable accessibilityRole="button" style={styles.iconBtn}>
           <Text style={styles.iconTxt}>≡</Text>
         </Pressable>
       </View>
 
       <View style={styles.stepRow}>
-        <Text style={styles.stepLabel}>객실 선택</Text>
+        <Text style={styles.stepLabel}>옵션 선택</Text>
         <View style={styles.stepDots}>
           <View style={[styles.stepDot, styles.stepPast]}>
             <Text style={styles.stepNumPast}>1</Text>
@@ -60,15 +50,25 @@ const Header = memo(function Header({ onBack }) {
   );
 });
 
-const OptionSelection = ({ navigation }) => {
-  // Use your real state/store here, fallback to defaults for now
-  const optionItems = DEFAULT_OPTIONS;
-  const bookingSummary = DEFAULT_SUMMARY;
+export default function OptionSelection() {
+  const route = useRoute();
+  const navigation = useNavigation();
+  const { priceType, room, summary } = route.params || {};
 
-  const handleDismiss = () => {
-    // Handle dismiss action, e.g., navigate or update state
-    navigation.goBack();
-  };
+  const [selectedOption, setSelectedOption] = useState(null);
+
+  // 금액 포맷
+  const fmtKRW = (n) =>
+    Math.round(n)
+      .toString()
+      .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+  // 총 금액 계산
+  const baseAmount = summary?.amount
+    ? parseInt(summary.amount.replace(/,/g, ""), 10)
+    : 0;
+  const optionPrice = selectedOption?.price || 0;
+  const totalAmount = baseAmount + optionPrice;
 
   return (
     <View style={styles.screen}>
@@ -88,55 +88,54 @@ const OptionSelection = ({ navigation }) => {
           <View style={styles.sectionUnderline} />
         </View>
 
-        {optionItems.map((item) => (
-          <Pressable key={item.id} style={styles.optionRow}>
+        {DEFAULT_OPTIONS.map((item) => (
+          <Pressable
+            key={item.id}
+            style={[
+              styles.optionRow,
+              selectedOption?.id === item.id && { backgroundColor: "#f6f6f6" },
+            ]}
+            onPress={() => setSelectedOption(item)}
+          >
             <Text style={styles.optionLabel}>{item.title}</Text>
             <Text style={styles.optionIcon}>+</Text>
           </Pressable>
         ))}
       </ScrollView>
 
+      {/* 하단 요약 + 버튼 */}
       <View style={styles.summaryShell}>
         <View style={styles.summaryCard}>
-          <Pressable accessibilityRole="button" style={styles.summaryToggle}>
-            <Text style={styles.summaryToggleText}>^</Text>
-          </Pressable>
-
-          <View style={styles.summaryContent}>
-            <Text style={styles.summaryHotel}>{bookingSummary.hotelName}</Text>
-            <Text style={styles.summaryMeta}>{bookingSummary.period}</Text>
-            <Text style={styles.summaryMeta}>{bookingSummary.guestInfo}</Text>
-
-            <View style={styles.summaryFooter}>
-              <Text style={styles.summaryLabel}>{bookingSummary.totalLabel}</Text>
-              <View style={styles.summaryPriceRow}>
-                <Text style={styles.summaryPrice}>{bookingSummary.amount}</Text>
-                <Text style={styles.summaryCurrency}>
-                  {` ${bookingSummary.currency}`}
-                </Text>
-              </View>
-            </View>
-          </View>
+          <Text style={styles.summaryHotel}>{summary?.hotelName}</Text>
+          <Text style={styles.summaryMeta}>{summary?.period}</Text>
+          <Text style={styles.summaryMeta}>총 요금</Text>
+          <Text style={styles.summaryPrice}>{fmtKRW(totalAmount)} KRW</Text>
         </View>
 
         <Pressable
           accessibilityRole="button"
           style={styles.summaryAction}
-          onPress={[handleDismiss]}
+          onPress={() =>
+            navigation.navigate("PayPage", {
+              priceType,
+              room,
+              summary: {
+                ...summary,
+                option: selectedOption?.title,
+                optionPrice: optionPrice,
+                totalAmount: totalAmount,
+              },
+            })
+          }
         >
-          <Text style={styles.summaryActionText}>
-            {bookingSummary.actionLabel}
-          </Text>
+          <Text style={styles.summaryActionText}>다음 단계</Text>
         </Pressable>
       </View>
     </View>
   );
-};
-
-export default OptionSelection;
+}
 
 const styles = StyleSheet.create({
-  // ... your styles as provided
   screen: { flex: 1, backgroundColor: "#fff" },
   headerWrap: { paddingHorizontal: H_PADDING, paddingTop: 8, backgroundColor: "#fff" },
   headerRow: {
@@ -147,14 +146,7 @@ const styles = StyleSheet.create({
   },
   iconBtn: { width: 24, height: 24, borderRadius: 14, alignItems: "center", justifyContent: "center" },
   iconTxt: { fontSize: 24, color: Color.text?.black || "#111" },
-
-  stepRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: 6,
-    marginBottom: 6,
-  },
+  stepRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 6, marginBottom: 6 },
   stepLabel: { color: "#5b5048", fontSize: 12, fontWeight: "600" },
   stepDots: { flexDirection: "row", alignItems: "center", gap: 8 },
   stepDot: { width: 24, height: 24, borderRadius: 12, alignItems: "center", justifyContent: "center" },
@@ -164,25 +156,11 @@ const styles = StyleSheet.create({
   stepNumPast: { color: Color.primary || "#978773", fontWeight: "700", fontSize: 12 },
   stepNumCurrent: { color: "#fff", fontWeight: "800", fontSize: 12 },
   stepNumFuture: { color: "#777", fontWeight: "700", fontSize: 12 },
-  content: {
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 140,
-  },
-  sectionHead: {
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 22,
-    fontWeight: "800",
-    color: Color.text?.black || "#111",
-    marginBottom: 6,
-  },
-  sectionUnderline: {
-    height: 2,
-    backgroundColor: Color.text?.black || "#111",
-    width: "100%",
-  },
+
+  content: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 140 },
+  sectionHead: { marginBottom: 16 },
+  sectionTitle: { fontSize: 22, fontWeight: "800", marginBottom: 6 },
+  sectionUnderline: { height: 2, backgroundColor: "#111", width: "100%" },
   optionRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -191,16 +169,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: "#d9d9d9",
   },
-  optionLabel: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: Color.text?.black || "#111",
-  },
-  optionIcon: {
-    fontSize: 22,
-    fontWeight: "300",
-    color: Color.text?.black || "#111",
-  },
+  optionLabel: { fontSize: 18, fontWeight: "700" },
+  optionIcon: { fontSize: 22, fontWeight: "300" },
+
   summaryShell: {
     position: "absolute",
     left: 0,
@@ -215,61 +186,18 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    paddingHorizontal: 20,
-    paddingTop: 18,
-    paddingBottom: 16,
+    padding: 16,
+    marginBottom: 12,
     shadowColor: "#000",
     shadowOpacity: 0.08,
     shadowOffset: { width: 0, height: -2 },
     shadowRadius: 10,
     elevation: 8,
-    marginBottom: 12,
   },
-  summaryToggle: {
-    alignSelf: "center",
-    marginBottom: 10,
-  },
-  summaryToggleText: {
-    fontSize: 18,
-    color: "#999",
-  },
-  summaryContent: {
-    gap: 4,
-  },
-  summaryHotel: {
-    fontSize: 18,
-    fontWeight: "800",
-    color: Color.text?.black || "#111",
-  },
-  summaryMeta: {
-    fontSize: 14,
-    color: "#777",
-  },
-  summaryFooter: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: 14,
-  },
-  summaryLabel: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: Color.text?.black || "#111",
-  },
-  summaryPriceRow: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-  },
-  summaryPrice: {
-    fontSize: 20,
-    fontWeight: "800",
-    color: Color.text?.black || "#111",
-  },
-  summaryCurrency: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: Color.text?.black || "#111",
-  },
+  summaryHotel: { fontSize: 18, fontWeight: "800" },
+  summaryMeta: { fontSize: 14, color: "#777" },
+  summaryPrice: { fontSize: 20, fontWeight: "800", marginTop: 8 },
+
   summaryAction: {
     backgroundColor: "#111",
     borderRadius: 8,
@@ -277,9 +205,5 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingVertical: 16,
   },
-  summaryActionText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "700",
-  },
+  summaryActionText: { color: "#fff", fontSize: 16, fontWeight: "700" },
 });
