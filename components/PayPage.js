@@ -1,4 +1,4 @@
-import React, { memo, useState } from "react";
+﻿import React, { memo, useState } from "react";
 import {
   SafeAreaView,
   View,
@@ -22,6 +22,21 @@ const COUNTRY_CODES = [
 ];
 
 const CARD_TYPES = ["Visa", "Mastercard", "American Express", "국내 신용카드"];
+
+const ONLINE_CARD_OPTIONS = [
+  { id: "domestic-card", label: "국내 신용카드" },
+  { id: "international-card", label: "해외 신용카드" },
+];
+
+const ONLINE_WALLETS = [
+  { id: "lpay", label: "L.pay", color: "#0070ff" },
+  { id: "npay", label: "N pay", color: "#03c75a" },
+  { id: "kakaopay", label: "카카오페이", color: "#191919" },
+  { id: "tosspay", label: "toss pay", color: "#0064ff" },
+  { id: "payco", label: "PAYCO", color: "#ff3b30" },
+  { id: "samsungpay", label: "SAMSUNG pay", color: "#1428a0" },
+  { id: "ssgpay", label: "SSGPAY", color: "#c8513f" },
+];
 
 /* =================== 공통 헤더 =================== */
 const Header = memo(function Header({ onBack }) {
@@ -103,6 +118,7 @@ export default function PayPage({ navigation, route }) {
   const [showGuestInfo, setShowGuestInfo] = useState(true);
   const [showRequestInfo, setShowRequestInfo] = useState(true);
   const [paymentMethod, setPaymentMethod] = useState("onsite");
+  const [selectedOnlineMethod, setSelectedOnlineMethod] = useState("");
   const [countryModalVisible, setCountryModalVisible] = useState(false);
   const [cardTypeModalVisible, setCardTypeModalVisible] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState(COUNTRY_CODES[0]);
@@ -138,6 +154,22 @@ export default function PayPage({ navigation, route }) {
     setCardTypeModalVisible(false);
   };
 
+  const handleSelectPaymentMethod = (method) => {
+    setPaymentMethod(method);
+    if (method === "online") {
+      setSelectedCardType("");
+      handleChange("cardNumber", "");
+      handleChange("cardExpiry", "");
+      handleChange("cardType", "");
+    } else {
+      setSelectedOnlineMethod("");
+    }
+  };
+
+  const handleSelectOnlineMethod = (id) => {
+    setSelectedOnlineMethod((prev) => (prev === id ? "" : id));
+  };
+
   // 유효성 검사
   const validate = () => {
     if (!inputs.lastName || !inputs.firstName || !inputs.email || !inputs.phone) {
@@ -145,9 +177,16 @@ export default function PayPage({ navigation, route }) {
       return false;
     }
 
-    if (!inputs.cardNumber || !inputs.cardExpiry || !inputs.cardType) {
-      Alert.alert("입력 오류", "카드 정보를 모두 입력해주세요.");
-      return false;
+    if (paymentMethod === "onsite") {
+      if (!inputs.cardNumber || !inputs.cardExpiry || !inputs.cardType) {
+        Alert.alert("입력 오류", "카드 정보를 모두 입력해주세요.");
+        return false;
+      }
+    } else {
+      if (!selectedOnlineMethod) {
+        Alert.alert("입력 오류", "온라인 결제 수단을 선택해주세요.");
+        return false;
+      }
     }
 
     return true;
@@ -255,7 +294,7 @@ export default function PayPage({ navigation, route }) {
           <View style={styles.paymentTabRow}>
             <Pressable
               accessibilityRole="button"
-              onPress={() => setPaymentMethod("online")}
+              onPress={() => handleSelectPaymentMethod("online")}
               style={[
                 styles.paymentTab,
                 paymentMethod === "online" ? styles.paymentTabActive : styles.paymentTabInactive,
@@ -274,7 +313,7 @@ export default function PayPage({ navigation, route }) {
             </Pressable>
             <Pressable
               accessibilityRole="button"
-              onPress={() => setPaymentMethod("onsite")}
+              onPress={() => handleSelectPaymentMethod("onsite")}
               style={[
                 styles.paymentTab,
                 paymentMethod === "onsite" ? styles.paymentTabActive : styles.paymentTabInactive,
@@ -293,44 +332,103 @@ export default function PayPage({ navigation, route }) {
             </Pressable>
           </View>
 
-          <Text style={styles.paymentSubTitle}>개런티 카드 정보</Text>
+          {paymentMethod === "onsite" ? (
+            <>
+              <Text style={styles.paymentSubTitle}>개런티 카드 정보</Text>
 
-          <Input
-            label="신용카드번호"
-            required
-            placeholder="0000 - 0000 - 0000 - 0000"
-            keyboardType="number-pad"
-            value={inputs.cardNumber}
-            onChangeText={(v) => handleChange("cardNumber", v)}
-          />
-          <Input
-            label="유효기간"
-            required
-            placeholder="MM / YY"
-            value={inputs.cardExpiry}
-            onChangeText={(v) => handleChange("cardExpiry", v)}
-          />
+              <Input
+                label="신용카드번호"
+                required
+                placeholder="0000 - 0000 - 0000 - 0000"
+                keyboardType="number-pad"
+                value={inputs.cardNumber}
+                onChangeText={(v) => handleChange("cardNumber", v)}
+              />
+              <Input
+                label="유효기간"
+                required
+                placeholder="MM / YY"
+                value={inputs.cardExpiry}
+                onChangeText={(v) => handleChange("cardExpiry", v)}
+              />
 
-          <View style={{ marginBottom: 12 }}>
-            <Text style={{ fontWeight: "700", marginBottom: 8 }}>
-              카드 종류<Text style={{ color: "red" }}> *</Text>
-            </Text>
-            <Pressable
-              style={styles.cardTypeSelect}
-              onPress={() => setCardTypeModalVisible(true)}
-              accessibilityRole="button"
-            >
-              <Text style={styles.cardTypeText}>
-                {selectedCardType || "카드 선택"}
-              </Text>
-              <Text style={styles.cardTypeArrow}>⌄</Text>
-            </Pressable>
-          </View>
+              <View style={{ marginBottom: 12 }}>
+                <Text style={{ fontWeight: "700", marginBottom: 8 }}>
+                  카드 종류<Text style={{ color: "red" }}> *</Text>
+                </Text>
+                <Pressable
+                  style={styles.cardTypeSelect}
+                  onPress={() => setCardTypeModalVisible(true)}
+                  accessibilityRole="button"
+                >
+                  <Text style={styles.cardTypeText}>
+                    {selectedCardType || "카드 선택"}
+                  </Text>
+                  <Text style={styles.cardTypeArrow}>⌄</Text>
+                </Pressable>
+              </View>
 
-          <View style={styles.paymentNotes}>
-            <Text style={styles.paymentNote}>- 신용카드 정보는 개런티/위약금 결제를 위해 이용되며, 객실요금은 추후 체크인 시 결제됩니다.</Text>
-            <Text style={styles.paymentNote}>- 체크인 시 개런티 카드가 아닌 다른 신용카드 또는 현금 결제도 가능합니다.</Text>
-          </View>
+              <View style={styles.paymentNotes}>
+                <Text style={styles.paymentNote}>- 신용카드 정보는 개런티/위약금 결제를 위해 이용되며, 객실요금은 추후 체크인 시 결제됩니다.</Text>
+                <Text style={styles.paymentNote}>- 체크인 시 개런티 카드가 아닌 다른 신용카드 또는 현금 결제도 가능합니다.</Text>
+              </View>
+            </>
+          ) : (
+            <>
+              <Text style={styles.paymentSubTitle}>결제 수단 선택</Text>
+              <View style={styles.paymentChoiceColumn}>
+                {ONLINE_CARD_OPTIONS.map((option) => {
+                  const selected = selectedOnlineMethod === option.id;
+                  return (
+                    <Pressable
+                      key={option.id}
+                      accessibilityRole="button"
+                      onPress={() => handleSelectOnlineMethod(option.id)}
+                      style={[
+                        styles.paymentChoiceBox,
+                        selected && styles.paymentChoiceBoxSelected,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.paymentChoiceLabel,
+                          selected && styles.paymentChoiceLabelSelected,
+                        ]}
+                      >
+                        {option.label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+
+              <View style={styles.paymentWalletGrid}>
+                {ONLINE_WALLETS.map((wallet) => {
+                  const selected = selectedOnlineMethod === wallet.id;
+                  return (
+                    <Pressable
+                      key={wallet.id}
+                      accessibilityRole="button"
+                      onPress={() => handleSelectOnlineMethod(wallet.id)}
+                      style={[
+                        styles.paymentWalletItem,
+                        selected && styles.paymentChoiceBoxSelected,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.paymentWalletLabel,
+                          wallet.color ? { color: wallet.color } : null,
+                        ]}
+                      >
+                        {wallet.label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </>
+          )}
         </Section>
 
         {/* 예약 내역 (토글 박스) */}
@@ -372,7 +470,7 @@ export default function PayPage({ navigation, route }) {
 
       <Modal
         visible={countryModalVisible}
-        animationType="fade"
+        animationType="slide"
         transparent
         onRequestClose={() => setCountryModalVisible(false)}
       >
@@ -397,7 +495,7 @@ export default function PayPage({ navigation, route }) {
 
       <Modal
         visible={cardTypeModalVisible}
-        animationType="fade"
+        animationType="slide"
         transparent
         onRequestClose={() => setCardTypeModalVisible(false)}
       >
@@ -495,6 +593,32 @@ const styles = StyleSheet.create({
   paymentTabTextActive: { color: "#fff" },
 
   paymentSubTitle: { fontSize: 15, fontWeight: "700", color: "#111", marginBottom: 16 },
+  paymentChoiceColumn: { gap: 12, marginBottom: 20 },
+  paymentChoiceBox: {
+    borderWidth: 1,
+    borderColor: "#cdb89f",
+    borderRadius: 10,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  paymentChoiceBoxSelected: { borderColor: Color.primary || "#978773", backgroundColor: "#f7f3ef" },
+  paymentChoiceLabel: { fontSize: 14, color: "#5c5146", fontWeight: "600" },
+  paymentChoiceLabelSelected: { color: Color.primary || "#978773" },
+  paymentWalletGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
+  paymentWalletItem: {
+    width: "47%",
+    borderWidth: 1,
+    borderColor: "#e1e1e1",
+    borderRadius: 10,
+    paddingVertical: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#fff",
+  },
+  paymentWalletLabel: { fontSize: 14, fontWeight: "700", color: "#333" },
   cardTypeSelect: {
     borderWidth: 1,
     borderColor: "#ccc",
@@ -559,13 +683,16 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.35)",
-    justifyContent: "center",
-    padding: 24,
+    justifyContent: "flex-end",
+    paddingHorizontal: 16,
+    paddingBottom: 24,
   },
   modalSheet: {
     backgroundColor: "#fff",
-    borderRadius: 12,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
     padding: 20,
+    width: "100%",
   },
   modalTitle: { fontSize: 16, fontWeight: "700", marginBottom: 12, color: "#111" },
   modalItem: { paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: "#f0f0f0" },
@@ -573,3 +700,4 @@ const styles = StyleSheet.create({
   modalClose: { marginTop: 12, alignSelf: "flex-end" },
   modalCloseTxt: { color: Color.primary || "#978773", fontWeight: "600" },
 });
+
