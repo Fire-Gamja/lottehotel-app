@@ -11,19 +11,23 @@ import {
   Modal,
 } from "react-native";
 import Color from "./styles/color";
-import useBookingStore from "../stores/bookingStore";
+
 const H_PADDING = 16;
+
 const COUNTRY_CODES = [
   { label: "대한민국 (+82)", code: "+82" },
   { label: "미국 (+1)", code: "+1" },
   { label: "일본 (+81)", code: "+81" },
   { label: "중국 (+86)", code: "+86" },
 ];
+
 const CARD_TYPES = ["Visa", "Mastercard", "American Express", "국내 신용카드"];
+
 const ONLINE_CARD_OPTIONS = [
   { id: "domestic-card", label: "국내 신용카드" },
   { id: "international-card", label: "해외 신용카드" },
 ];
+
 const ONLINE_WALLETS = [
   { id: "lpay", label: "L.pay", color: "#0070ff" },
   { id: "npay", label: "N pay", color: "#03c75a" },
@@ -31,58 +35,9 @@ const ONLINE_WALLETS = [
   { id: "tosspay", label: "toss pay", color: "#0064ff" },
   { id: "payco", label: "PAYCO", color: "#ff3b30" },
   { id: "samsungpay", label: "SAMSUNG pay", color: "#1428a0" },
-  { id: "ssgpay", label: "SSGPAY", color: "#c8513f", fullWidth: true },
+  { id: "ssgpay", label: "SSGPAY", color: "#c8513f" },
 ];
-const DEFAULT_CANCELLATION_HIGHLIGHT = "2025.11.27 18:00(한국/서울 기준)까지 무료 취소 가능합니다.";
-const DEFAULT_CANCELLATION_TIMELINE = [
-  "지금부터 2025.11.27 18:00(한국/서울 기준)까지 무료 취소 가능",
-  "2025.11.27 18:00(한국/서울 기준) 이후 예약 취소 시 위약금 발생",
-  "2025.11.29(한국/서울 기준) 체크인",
-];
-const CANCELLATION_NOTES = [
-  "예약 취소 및 변경은 체크인 2일 전 18:00(한국시간)까지 가능하며, 무료 취소 기한 이후 예약이 변경 및 취소될 경우, 예약 첫날에 해당하는 1박 객실 요금이 예약 보증용 신용카드로 청구됩니다. (12/24 및 12/31 예약은 21일 전 18시까지 가능)",
-  "특별 프로모션 및 패키지 상품의 경우 별도의 취소 규정이 적용 되오니 상품별 규정을 확인해 주세요. 현장결제 예약 후 보증용 신용카드의 유효성 확인을 위하여 카드 승인 후 취소가 될 수 있습니다.",
-];
-const AGREEMENT_ITEMS = [
-  { id: "all", label: "전체동의" },
-  { id: "personal", label: "개인정보 수집 및 이용에 관한 안내 (객실예약)" },
-  { id: "hotel", label: "호텔 이용약관 동의", required: true },
-  { id: "cancel", label: "취소규정 동의", required: true },
-];
-const PRE_RESERVATION_NOTES = [
-  "온라인으로 결제한 금액에 대하여 L.POINT 적립은 투숙기간동안 호텔 프론트를 통해 가능합니다.",
-  "온라인 결제 진행 후, 프론트에서 결제 수단 변경이 불가하오니 유의하시기 바랍니다.",
-  "만 19세 미만 미성년자는 법정 보호자를 동반할 경우에만 투숙이 가능합니다. 단독 투숙은 불가하오니 이용에 참고해 주십시오.",
-];
-const normalizeDateInput = (value) => {
-  if (!value) return null;
-  if (value instanceof Date) {
-    return Number.isNaN(value.getTime()) ? null : value;
-  }
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? null : parsed;
-};
-const formatDateLabel = (date) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}.${month}.${day}`;
-};
-const buildDeadlineLabel = (deadlineDate) => `${formatDateLabel(deadlineDate)} 18:00(한국/서울 기준)`;
-const buildCheckInLabel = (checkInDate) => `${formatDateLabel(checkInDate)}(한국/서울 기준)`;
-const getDeadlineDate = (checkInDate) => {
-  const date = new Date(
-    checkInDate.getFullYear(),
-    checkInDate.getMonth(),
-    checkInDate.getDate(),
-    18,
-    0,
-    0,
-    0
-  );
-  date.setDate(date.getDate() - 2);
-  return date;
-};
+
 /* =================== 공통 헤더 =================== */
 const Header = memo(function Header({ onBack }) {
   return (
@@ -95,6 +50,7 @@ const Header = memo(function Header({ onBack }) {
           <Text style={styles.iconTxt}>≡</Text>
         </Pressable>
       </View>
+
       <View style={styles.stepRow}>
         <Text style={styles.stepLabel}>예약정보 입력</Text>
         <View style={styles.stepDots}>
@@ -107,6 +63,7 @@ const Header = memo(function Header({ onBack }) {
     </View>
   );
 });
+
 /* =================== Input =================== */
 function Input({ label, required, value, onChangeText, placeholder, renderTop, ...textInputProps }) {
   return (
@@ -130,9 +87,11 @@ function Input({ label, required, value, onChangeText, placeholder, renderTop, .
     </View>
   );
 }
+
 /* =================== Section =================== */
 function Section({ title, children, collapsible, isOpen = true, onToggle }) {
   const showContent = !collapsible || isOpen;
+
   return (
     <View style={styles.sectionWrap}>
       <View style={styles.sectionHeader}>
@@ -147,9 +106,11 @@ function Section({ title, children, collapsible, isOpen = true, onToggle }) {
     </View>
   );
 }
+
 /* =================== KRW 포맷 =================== */
 const fmtKRW = (n) =>
   Math.round(Number(n || 0)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
 /* =================== 메인 =================== */
 export default function PayPage({ navigation, route }) {
   const { priceType, room, summary } = route?.params || {};
@@ -162,24 +123,7 @@ export default function PayPage({ navigation, route }) {
   const [cardTypeModalVisible, setCardTypeModalVisible] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState(COUNTRY_CODES[0]);
   const [selectedCardType, setSelectedCardType] = useState("");
-  const [showCancellationDetail, setShowCancellationDetail] = useState(true);
-  const [agreements, setAgreements] = useState({ all: false, personal: false, hotel: false, cancel: false });
-  const bookingStartDate = useBookingStore((s) => s.startDate);
-  const summaryCheckIn = normalizeDateInput(summary?.checkInDate || summary?.startDate);
-  const checkInDate = summaryCheckIn || normalizeDateInput(bookingStartDate);
-  const cancellationDeadlineDate = checkInDate ? getDeadlineDate(checkInDate) : null;
-  const deadlineLabel = cancellationDeadlineDate ? buildDeadlineLabel(cancellationDeadlineDate) : null;
-  const checkInLabel = checkInDate ? buildCheckInLabel(checkInDate) : null;
-  const cancellationHighlight = deadlineLabel
-    ? `${deadlineLabel}까지 무료 취소 가능합니다.`
-    : DEFAULT_CANCELLATION_HIGHLIGHT;
-  const cancellationTimeline = deadlineLabel && checkInLabel
-    ? [
-        `지금부터 ${deadlineLabel}까지 무료 취소 가능`,
-        `${deadlineLabel} 이후 예약 취소 시 위약금 발생`,
-        `${checkInLabel} 체크인`,
-      ]
-    : DEFAULT_CANCELLATION_TIMELINE;
+
   // 입력 상태
   const [inputs, setInputs] = useState({
     lastName: "",
@@ -193,19 +137,23 @@ export default function PayPage({ navigation, route }) {
     cardExpiry: "",
     cardType: "",
   });
+
   const handleChange = (key, value) => {
     setInputs((prev) => ({ ...prev, [key]: value }));
   };
+
   const handleSelectCountry = (country) => {
     setSelectedCountry(country);
     handleChange("countryCode", country.code);
     setCountryModalVisible(false);
   };
+
   const handleSelectCardType = (type) => {
     setSelectedCardType(type);
     handleChange("cardType", type);
     setCardTypeModalVisible(false);
   };
+
   const handleSelectPaymentMethod = (method) => {
     setPaymentMethod(method);
     if (method === "online") {
@@ -217,44 +165,30 @@ export default function PayPage({ navigation, route }) {
       setSelectedOnlineMethod("");
     }
   };
+
   const handleSelectOnlineMethod = (id) => {
     setSelectedOnlineMethod((prev) => (prev === id ? "" : id));
-  };
-const toggleAgreement = (key) => {
-    if (key === 'all') {
-      const next = !agreements.all;
-      setAgreements({ all: next, personal: next, hotel: next, cancel: next });
-      return;
-    }
-
-    setAgreements((prev) => {
-      const next = { ...prev, [key]: !prev[key] };
-      next.all = next.personal && next.hotel && next.cancel;
-      return next;
-    });
   };
 
   // 유효성 검사
   const validate = () => {
     if (!inputs.lastName || !inputs.firstName || !inputs.email || !inputs.phone) {
-      Alert.alert("입력 오류", "필수 항목을 모두 입력해 주세요.");
+      Alert.alert("입력 오류", "필수 항목을 모두 입력해주세요.");
       return false;
     }
+
     if (paymentMethod === "onsite") {
       if (!inputs.cardNumber || !inputs.cardExpiry || !inputs.cardType) {
-        Alert.alert("입력 오류", "카드 정보를 모두 입력해 주세요.");
+        Alert.alert("입력 오류", "카드 정보를 모두 입력해주세요.");
         return false;
       }
     } else {
       if (!selectedOnlineMethod) {
-        Alert.alert("입력 오류", "온라인 결제 수단을 선택해 주세요.");
+        Alert.alert("입력 오류", "온라인 결제 수단을 선택해주세요.");
         return false;
       }
     }
-    if (!agreements.hotel || !agreements.cancel) {
-      Alert.alert("약관 동의", "필수 이용 약관에 동의해 주세요.");
-      return false;
-    }
+
     return true;
   };
 
@@ -263,9 +197,11 @@ const toggleAgreement = (key) => {
     Alert.alert("예약 완료", "예약 정보가 정상적으로 입력되었습니다.");
     // TODO: 실제 결제/예약 API 연동
   };
+
   return (
     <SafeAreaView style={styles.screen}>
       <Header onBack={() => navigation.goBack()} />
+
       <ScrollView contentContainerStyle={{ padding: H_PADDING, paddingBottom: 40 }}>
         {/* 예약자 정보 입력 */}
         <Section
@@ -322,6 +258,7 @@ const toggleAgreement = (key) => {
             onChangeText={(v) => handleChange("arrivalTime", v)}
           />
         </Section>
+
         <Section
           title="요청 사항"
           collapsible
@@ -352,6 +289,7 @@ const toggleAgreement = (key) => {
             <Text style={styles.requestNote}>(예: 아기침대, 욕실용 발판 등)</Text>
           </View>
         </Section>
+
         <Section title="결제 정보">
           <View style={styles.paymentTabRow}>
             <Pressable
@@ -393,9 +331,11 @@ const toggleAgreement = (key) => {
               </Text>
             </Pressable>
           </View>
+
           {paymentMethod === "onsite" ? (
             <>
               <Text style={styles.paymentSubTitle}>개런티 카드 정보</Text>
+
               <Input
                 label="신용카드번호"
                 required
@@ -411,6 +351,7 @@ const toggleAgreement = (key) => {
                 value={inputs.cardExpiry}
                 onChangeText={(v) => handleChange("cardExpiry", v)}
               />
+
               <View style={{ marginBottom: 12 }}>
                 <Text style={{ fontWeight: "700", marginBottom: 8 }}>
                   카드 종류<Text style={{ color: "red" }}> *</Text>
@@ -426,6 +367,7 @@ const toggleAgreement = (key) => {
                   <Text style={styles.cardTypeArrow}>⌄</Text>
                 </Pressable>
               </View>
+
               <View style={styles.paymentNotes}>
                 <Text style={styles.paymentNote}>- 신용카드 정보는 개런티/위약금 결제를 위해 이용되며, 객실요금은 추후 체크인 시 결제됩니다.</Text>
                 <Text style={styles.paymentNote}>- 체크인 시 개런티 카드가 아닌 다른 신용카드 또는 현금 결제도 가능합니다.</Text>
@@ -459,7 +401,7 @@ const toggleAgreement = (key) => {
                   );
                 })}
               </View>
-              <Text style={styles.paymentWalletSectionTitle}>간편 결제</Text>
+
               <View style={styles.paymentWalletGrid}>
                 {ONLINE_WALLETS.map((wallet) => {
                   const selected = selectedOnlineMethod === wallet.id;
@@ -470,7 +412,6 @@ const toggleAgreement = (key) => {
                       onPress={() => handleSelectOnlineMethod(wallet.id)}
                       style={[
                         styles.paymentWalletItem,
-                        wallet.fullWidth && styles.paymentWalletItemFull,
                         selected && styles.paymentChoiceBoxSelected,
                       ]}
                     >
@@ -489,84 +430,6 @@ const toggleAgreement = (key) => {
             </>
           )}
         </Section>
-        <Section title="요금 및 취소 규정">
-          <View style={styles.rulesGroup}>
-            <Text style={styles.rulesHeading}>요금 규정</Text>
-            <Text style={styles.rulesBody}>Guarantee by Credit Card</Text>
-          </View>
-
-          <View style={styles.rulesDivider} />
-
-          <Pressable
-            accessibilityRole="button"
-            style={styles.cancellationHeader}
-            onPress={() => setShowCancellationDetail((prev) => !prev)}
-          >
-            <Text style={styles.rulesHeading}>취소 규정</Text>
-            <Text style={styles.cancellationToggle}>{showCancellationDetail ? "▲" : "▼"}</Text>
-          </Pressable>
-
-          <Text style={styles.cancellationHighlight}>{cancellationHighlight}</Text>
-
-          {showCancellationDetail && (
-            <>
-              <View style={styles.cancellationTimeline}>
-                {cancellationTimeline.map((item) => (
-                  <Text key={item} style={styles.cancellationTimelineText}>
-                    {item}
-                  </Text>
-                ))}
-              </View>
-              {CANCELLATION_NOTES.map((note) => (
-                <Text key={note} style={styles.cancellationNote}>
-                  {note}
-                </Text>
-              ))}
-            </>
-          )}
-
-          <View style={styles.termsSection}>
-            <Text style={styles.rulesHeading}>이용 약관</Text>
-            {AGREEMENT_ITEMS.map((item) => {
-              const checked = agreements[item.id];
-              return (
-                <Pressable
-                  key={item.id}
-                  accessibilityRole="button"
-                  onPress={() => toggleAgreement(item.id)}
-                  style={[
-                    styles.agreementRow,
-                    checked && styles.agreementRowActive,
-                    item.id === "all" && styles.agreementRowAll,
-                  ]}
-                >
-                  <View style={[styles.checkboxBase, checked && styles.checkboxChecked]}>
-                    {checked ? <Text style={styles.checkboxIcon}>✓</Text> : null}
-                  </View>
-                  <View style={styles.agreementLabelWrapper}>
-                    <Text style={styles.agreementLabel}>
-                      {item.required ? <Text style={styles.agreementRequired}>(필수) </Text> : null}
-                      {item.label}
-                    </Text>
-                  </View>
-                  {item.id !== "all" ? <Text style={styles.agreementChevron}>›</Text> : null}
-                </Pressable>
-              );
-            })}
-          </View>
-
-          <View style={styles.noticeSection}>
-            <Text style={styles.rulesHeading}>예약 전 확인사항</Text>
-            <View style={styles.noticeBox}>
-              {PRE_RESERVATION_NOTES.map((note) => (
-                <View key={note} style={styles.noticeRow}>
-                  <Text style={styles.noticeBullet}>•</Text>
-                  <Text style={styles.noticeText}>{note}</Text>
-                </View>
-              ))}
-            </View>
-          </View>
-        </Section>
 
         {/* 예약 내역 (토글 박스) */}
         <View style={styles.summaryBox}>
@@ -576,12 +439,14 @@ const toggleAgreement = (key) => {
               <Text style={styles.arrow}>{showDetails ? "⌃" : "⌄"}</Text>
             </Pressable>
           </View>
+
           {/* 기본 요약 */}
           <Text style={styles.summaryText}>
             {summary?.hotelName || "시그니엘 서울"}{"\n"}
             {summary?.period || "09월 19일(금) ~ 09월 20일(토) / 1박"}{"\n"}
             성인 {summary?.guests || 2}명
           </Text>
+
           {/* 펼침 상세 */}
           {showDetails && (
             <View style={styles.detailBox}>
@@ -596,11 +461,13 @@ const toggleAgreement = (key) => {
             </View>
           )}
         </View>
+
         {/* 예약하기 버튼 */}
         <Pressable style={styles.reserveBtn} onPress={handleReserve}>
           <Text style={styles.reserveBtnTxt}>예약하기</Text>
         </Pressable>
       </ScrollView>
+
       <Modal
         visible={countryModalVisible}
         animationType="slide"
@@ -625,6 +492,7 @@ const toggleAgreement = (key) => {
           </View>
         </View>
       </Modal>
+
       <Modal
         visible={cardTypeModalVisible}
         animationType="slide"
@@ -652,12 +520,15 @@ const toggleAgreement = (key) => {
     </SafeAreaView>
   );
 }
+
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: "#fff" },
+
   headerWrap: { paddingHorizontal: H_PADDING, paddingTop: 8, backgroundColor: "#fff" },
   headerRow: { height: 48, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   iconBtn: { width: 24, height: 24, borderRadius: 14, alignItems: "center", justifyContent: "center" },
   iconTxt: { fontSize: 24, color: Color.text?.black || "#111" },
+
   stepRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 6, marginBottom: 6 },
   stepLabel: { color: "#5b5048", fontSize: 12, fontWeight: "600" },
   stepDots: { flexDirection: "row", alignItems: "center", gap: 8 },
@@ -668,6 +539,7 @@ const styles = StyleSheet.create({
   stepNumPast: { color: Color.primary || "#978773", fontWeight: "700", fontSize: 12 },
   stepNumCurrent: { color: "#fff", fontWeight: "800", fontSize: 12 },
   stepNumFuture: { color: "#777", fontWeight: "700", fontSize: 12 },
+
   sectionWrap: { marginBottom: 24 },
   sectionHeader: {
     flexDirection: "row",
@@ -680,6 +552,7 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 16, fontWeight: "800", color: "#111" },
   sectionToggle: { fontSize: 24, color: "#555" },
   sectionBody: { marginTop: 16 },
+
   requestLabel: { fontWeight: "700", marginBottom: 8, color: "#111" },
   requestInput: {
     borderWidth: 1,
@@ -697,6 +570,7 @@ const styles = StyleSheet.create({
   requestCounterTotal: { fontSize: 12, color: "#999" },
   requestNotes: { marginTop: 16, gap: 6 },
   requestNote: { fontSize: 12, color: "#777", lineHeight: 18 },
+
   paymentTabRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -717,8 +591,9 @@ const styles = StyleSheet.create({
   paymentTabText: { fontSize: 13, fontWeight: "600" },
   paymentTabTextInactive: { color: "#666" },
   paymentTabTextActive: { color: "#fff" },
+
   paymentSubTitle: { fontSize: 15, fontWeight: "700", color: "#111", marginBottom: 16 },
-  paymentChoiceColumn: { gap: 12, marginBottom: 24 },
+  paymentChoiceColumn: { gap: 12, marginBottom: 20 },
   paymentChoiceBox: {
     borderWidth: 1,
     borderColor: "#cdb89f",
@@ -729,18 +604,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  paymentChoiceBoxSelected: {
-    borderColor: Color.primary || "#978773",
-    backgroundColor: "#f7f3ef",
-  },
-  paymentChoiceLabel: { fontSize: 15, color: "#4d4034", fontWeight: "600" },
+  paymentChoiceBoxSelected: { borderColor: Color.primary || "#978773", backgroundColor: "#f7f3ef" },
+  paymentChoiceLabel: { fontSize: 14, color: "#5c5146", fontWeight: "600" },
   paymentChoiceLabelSelected: { color: Color.primary || "#978773" },
-  paymentWalletSectionTitle: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#111",
-    marginBottom: 12,
-  },
   paymentWalletGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
   paymentWalletItem: {
     width: "47%",
@@ -753,33 +619,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   paymentWalletLabel: { fontSize: 14, fontWeight: "700", color: "#333" },
-  rulesGroup: { marginBottom: 20, gap: 6 },
-  rulesHeading: { fontSize: 15, fontWeight: "700", color: "#111" },
-  rulesBody: { fontSize: 13, color: "#555", lineHeight: 20 },
-  rulesDivider: { height: 1, backgroundColor: "#eee", marginBottom: 16 },
-  cancellationHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 },
-  cancellationToggle: { fontSize: 14, color: "#888" },
-  cancellationHighlight: { fontSize: 14, fontWeight: "700", color: "#5c5146", marginBottom: 12 },
-  cancellationTimeline: { backgroundColor: "#f7f3ef", borderRadius: 12, padding: 16, borderLeftWidth: 4, borderLeftColor: Color.primary || "#978773", marginBottom: 16, gap: 8 },
-  cancellationTimelineText: { fontSize: 13, color: "#444", lineHeight: 20 },
-  cancellationNote: { fontSize: 12, color: "#777", lineHeight: 18, marginBottom: 8 },
-  termsSection: { marginTop: 24 },
-  agreementRow: { flexDirection: "row", alignItems: "center", paddingVertical: 14, paddingHorizontal: 14, borderWidth: 1, borderColor: "#e4d9cc", borderRadius: 12, backgroundColor: "#fff", marginBottom: 12 },
-  agreementRowActive: { borderColor: Color.primary || "#978773", backgroundColor: "#f7f3ef" },
-  agreementRowAll: { borderWidth: 1.5 },
-  checkboxBase: { width: 22, height: 22, borderRadius: 6, borderWidth: 1.5, borderColor: "#c9c0b4", alignItems: "center", justifyContent: "center" },
-  checkboxChecked: { borderColor: Color.primary || "#978773", backgroundColor: Color.primary || "#978773" },
-  checkboxIcon: { fontSize: 14, color: "#fff", fontWeight: "700" },
-  agreementLabelWrapper: { flex: 1, marginLeft: 12 },
-  agreementLabel: { fontSize: 13, color: "#333", lineHeight: 20 },
-  agreementRequired: { color: Color.primary || "#978773", fontWeight: "700" },
-  agreementChevron: { fontSize: 18, color: "#bbb", marginLeft: 12 },
-  noticeSection: { marginTop: 28 },
-  noticeBox: { backgroundColor: "#f7f5f3", borderRadius: 12, padding: 16, gap: 10 },
-  noticeRow: { flexDirection: "row", alignItems: "flex-start", gap: 8 },
-  noticeBullet: { fontSize: 12, color: Color.primary || "#978773", marginTop: 2 },
-  noticeText: { flex: 1, fontSize: 12, color: "#555", lineHeight: 18 },
   cardTypeSelect: {
+
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 8,
@@ -800,6 +641,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   paymentNote: { fontSize: 12, color: "#666", lineHeight: 18 },
+
   summaryBox: {
     marginTop: 16,
     padding: 16,
@@ -812,8 +654,10 @@ const styles = StyleSheet.create({
   summaryTitle: { fontSize: 16, fontWeight: "700", color: "#333" },
   arrow: { fontSize: 18, color: "#555", padding: 4 },
   summaryText: { fontSize: 14, color: "#333", lineHeight: 20 },
+
   detailBox: { marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: "#ddd" },
   detailRow: { fontSize: 13, color: "#555", marginBottom: 6 },
+
   reserveBtn: {
     marginTop: 20,
     backgroundColor: Color.primary || "#978773",
@@ -822,6 +666,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   reserveBtnTxt: { color: "#fff", fontSize: 16, fontWeight: "700" },
+
   countrySelect: {
     flexDirection: "row",
     alignItems: "center",
@@ -835,6 +680,7 @@ const styles = StyleSheet.create({
   },
   countrySelectText: { fontSize: 14, color: "#333" },
   countrySelectArrow: { fontSize: 16, color: "#555" },
+
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.35)",
@@ -855,4 +701,3 @@ const styles = StyleSheet.create({
   modalClose: { marginTop: 12, alignSelf: "flex-end" },
   modalCloseTxt: { color: Color.primary || "#978773", fontWeight: "600" },
 });
-
